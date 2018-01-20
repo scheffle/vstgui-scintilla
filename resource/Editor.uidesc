@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<vstgui-ui-description version="1">
+	<fonts>
+	</fonts>
+	<colors>
+		<color name="WindowBackground" rgba="#d0d0d0ff"/>
+	</colors>
+	<template autosize="left right top bottom " background-color="WindowBackground" background-color-draw-style="filled and stroked" class="CViewContainer" mouse-enabled="true" name="Editor" opacity="1" origin="0, 0" size="650, 470" sub-controller="EditorController" transparent="false" wants-focus="false">
+		<view autosize="left right top bottom " background-offset="0, 0" class="ScintillaEditorView" default-value="0.5" max-value="1" min-value="0" mouse-enabled="true" opacity="1" origin="20, 20" size="610, 430" transparent="false" wants-focus="true" wheel-inc-value="0.1"/>
+	</template>
+	<custom>
+		<attributes name="UIDescFilePath" path="/Users/scheffle/git/vstgui-scintilla/resource/Editor.uidesc"/>
+		<attributes Size="10, 10" name="UIGridController"/>
+		<attributes SelectedTemplate="Editor" name="UITemplateController"/>
+		<attributes EditViewScale="1" EditorSize="0, 0, 1099, 863" SplitViewSize_0_0="0.7030878859857482288120422708743717521429" SplitViewSize_0_1="0.2731591448931116605791658002999611198902" SplitViewSize_1_0="0.4904988123515439668587134747212985530496" SplitViewSize_1_1="0.5035629453681710332446641587011981755495" SplitViewSize_2_0="0.7106460418562329239833275096316356211901" SplitViewSize_2_1="0.2848043676069153540275635805301135405898" TabSwitchValue="0" Version="1" name="UIEditController"/>
+		<attributes name="UIAttributesController"/>
+		<attributes SelectedRow="18" name="UIViewCreatorDataSource"/>
+		<attributes SelectedRow="0" name="UIColorsDataSource"/>
+	</custom>
+	<bitmaps/>
+	<control-tags/>
+</vstgui-ui-description>
