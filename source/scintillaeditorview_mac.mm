@@ -1,5 +1,5 @@
 //
-//  ScintillaView.cpp
+//  scintillaeditorview_mac.mm
 //  scintilla-example
 //
 //  Created by Arne Scheffler on 20.01.18.
@@ -7,8 +7,14 @@
 
 #import "scintillaeditorview.h"
 #import "vstgui/lib/cframe.h"
+#import "vstgui/lib/dispatchlist.h"
 #import "vstgui/lib/platform/platform_macos.h"
 #import <Scintilla/ScintillaView.h>
+
+//------------------------------------------------------------------------
+@interface VSTGUI_ScintillaView_Delegate : NSObject <ScintillaNotificationProtocol>
+@property (readwrite, nonatomic) VSTGUI::ScintillaEditorView::Impl* impl;
+@end
 
 //------------------------------------------------------------------------
 namespace VSTGUI {
@@ -30,19 +36,25 @@ void releaseObject (NSObject* obj)
 struct ScintillaEditorView::Impl
 {
 	ScintillaView* view {nil};
+	VSTGUI_ScintillaView_Delegate* delegate {nil};
+	DispatchList<IScintillaListener*> listeners;
 };
 
 //------------------------------------------------------------------------
-ScintillaEditorView::ScintillaEditorView () : CControl (CRect (0, 0, 0, 0))
+ScintillaEditorView::ScintillaEditorView () : CView (CRect (0, 0, 0, 0))
 {
 	impl = std::make_unique<Impl> ();
+	impl->delegate = [VSTGUI_ScintillaView_Delegate new];
+	impl->delegate.impl = impl.get ();
 	impl->view = [[ScintillaView alloc] initWithFrame:NSMakeRect (0, 0, 10, 10)];
+	impl->view.delegate = impl->delegate;
 }
 
 //------------------------------------------------------------------------
 ScintillaEditorView::~ScintillaEditorView () noexcept
 {
 	releaseObject (impl->view);
+	releaseObject (impl->delegate);
 }
 
 //------------------------------------------------------------------------
@@ -60,7 +72,7 @@ bool ScintillaEditorView::attached (CView* parent)
 	auto cocoaFrame = dynamic_cast<ICocoaPlatformFrame*> (parentFrame->getPlatformFrame ());
 	if (!cocoaFrame)
 		return false;
-	if (CControl::attached (parent))
+	if (CView::attached (parent))
 	{
 		setViewSize (getViewSize (), false);
 		[cocoaFrame->getNSView () addSubview:impl->view];
@@ -73,28 +85,30 @@ bool ScintillaEditorView::attached (CView* parent)
 bool ScintillaEditorView::removed (CView* parent)
 {
 	[impl->view removeFromSuperview];
-	return CControl::removed (parent);
+	return CView::removed (parent);
 }
 
 //------------------------------------------------------------------------
 void ScintillaEditorView::setViewSize (const CRect& rect, bool invalid)
 {
-	CPoint p;
-	localToFrame (p);
-	NSRect frameRect;
-	frameRect.origin.x = rect.left + p.x;
-	frameRect.origin.y = rect.top + p.y;
-	frameRect.size.width = getWidth ();
-	frameRect.size.height = getHeight ();
-	impl->view.frame = frameRect;
-	CControl::setViewSize (rect, false);
+	if (isAttached ())
+	{
+		CPoint p;
+		localToFrame (p);
+		NSRect frameRect;
+		frameRect.origin.x = rect.left + p.x;
+		frameRect.origin.y = rect.top + p.y;
+		frameRect.size.width = rect.getWidth ();
+		frameRect.size.height = rect.getHeight ();
+		impl->view.frame = frameRect;
+	}
+	CView::setViewSize (rect, false);
 }
 
 //------------------------------------------------------------------------
 void ScintillaEditorView::setText (UTF8StringPtr text)
 {
-	sendMessage (SCI_SETTEXT, 0, reinterpret_cast<intptr_t> (text));
-	valueChanged ();
+	sendMessageT (SCI_SETTEXT, 0, text);
 }
 
 //------------------------------------------------------------------------
@@ -104,4 +118,26 @@ intptr_t ScintillaEditorView::sendMessage (uint32_t message, uintptr_t wParam, i
 }
 
 //------------------------------------------------------------------------
+void ScintillaEditorView::registerListener (IScintillaListener* listener)
+{
+	impl->listeners.add (listener);
+}
+
+//------------------------------------------------------------------------
+void ScintillaEditorView::unregisterListener (IScintillaListener* listener)
+{
+	impl->listeners.remove (listener);
+}
+
+//------------------------------------------------------------------------
 } // VSTGUI
+
+//------------------------------------------------------------------------
+@implementation VSTGUI_ScintillaView_Delegate
+- (void)notification:(SCNotification*)notification
+{
+	self.impl->listeners.forEach (
+	    [&] (auto& listener) { listener->onScintillaNotification (notification); });
+}
+
+@end

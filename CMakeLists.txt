@@ -60,8 +60,8 @@ if(CMAKE_HOST_APPLE)
 	)
 
 	set(ScintillaFramework 
-		${CMAKE_CURRENT_SOURCE_DIR}/scintilla/cocoa/ScintillaFramework/build/Debug/Scintilla.framework
-#		${CMAKE_CURRENT_SOURCE_DIR}/scintilla/cocoa/ScintillaFramework/build/Release//Scintilla.framework
+#		${CMAKE_CURRENT_SOURCE_DIR}/scintilla/cocoa/ScintillaFramework/build/Debug/Scintilla.framework
+		${CMAKE_CURRENT_SOURCE_DIR}/scintilla/cocoa/ScintillaFramework/build/Release//Scintilla.framework
 	)
 	set_source_files_properties(${ScintillaFramework} PROPERTIES
 		MACOSX_PACKAGE_LOCATION "Frameworks"

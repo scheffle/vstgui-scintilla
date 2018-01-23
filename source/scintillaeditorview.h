@@ -1,19 +1,30 @@
 //
-//  ScintillaView.h
+//  scintillaeditorview.h
 //  scintilla-example
 //
 //  Created by Arne Scheffler on 20.01.18.
 //
 
-#include "vstgui/lib/controls/ccontrol.h"
 #include "vstgui/lib/ccolor.h"
+#include "vstgui/lib/cview.h"
 #include <memory>
+
+struct SCNotification; // forward
 
 //------------------------------------------------------------------------
 namespace VSTGUI {
 
 //------------------------------------------------------------------------
-class ScintillaEditorView : public CControl
+class IScintillaListener
+{
+public:
+	virtual void onScintillaNotification (SCNotification* notification) = 0;
+
+	virtual ~IScintillaListener () noexcept = default;
+};
+
+//------------------------------------------------------------------------
+class ScintillaEditorView : public CView
 {
 public:
 	ScintillaEditorView ();
@@ -29,21 +40,41 @@ public:
 	/** send a message to the scintilla backend */
 	intptr_t sendMessage (uint32_t message, uintptr_t wParam, intptr_t lParam);
 
-	static intptr_t colorFromCColor (const CColor& c)
+	template<typename T>
+	intptr_t sendMessageT (uint32_t message, uintptr_t wParam, T lParam)
 	{
-		int32_t red = static_cast<int32_t> (c.red);
-		int32_t green = static_cast<int32_t> (c.green);
-		int32_t blue = static_cast<int32_t> (c.blue);
-		return (blue << 16) + (green << 8) + red;
+		return sendMessage (message, wParam, reinterpret_cast<intptr_t>(lParam));
 	}
 
-	CLASS_METHODS_NOCOPY (ScintillaEditorView, CControl)
+	void registerListener (IScintillaListener* listener);
+	void unregisterListener (IScintillaListener* listener);
+
+	struct Impl;
+
 private:
 	void draw (CDrawContext* pContext) override;
-	struct Impl;
 	std::unique_ptr<Impl> impl;
 };
 
 //------------------------------------------------------------------------
-} // VSTGUI
+/** a helper to convert from CColor to a color scintilla understands */
+inline intptr_t toScintillaColor (const CColor& c)
+{
+	int32_t red = static_cast<int32_t> (c.red);
+	int32_t green = static_cast<int32_t> (c.green);
+	int32_t blue = static_cast<int32_t> (c.blue);
+	return (blue << 16) + (green << 8) + red;
+}
 
+//------------------------------------------------------------------------
+inline CColor fromScintillaColor (intptr_t v)
+{
+	int32_t blue = (v & 0x00FF0000) >> 16;
+	int32_t green = (v & 0x0000FF00) >> 8;
+	int32_t red = v & 0x000000FF;
+	return CColor (static_cast<uint8_t> (red), static_cast<uint8_t> (green),
+	               static_cast<uint8_t> (blue));
+}
+
+//------------------------------------------------------------------------
+} // VSTGUI
