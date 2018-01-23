@@ -17,7 +17,7 @@ add_subdirectory("vstgui/vstgui/")
 set(target scintilla-example)
 set(${target}_sources
 	"source/app.cpp"
-	"source/scintillaeditorview_uidesc.cpp"
+	"source/scintillaeditorview.cpp"
 	"source/scintillaeditorview.h"
 )
 

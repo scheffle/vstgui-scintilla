@@ -106,13 +106,15 @@ void ScintillaEditorView::setViewSize (const CRect& rect, bool invalid)
 }
 
 //------------------------------------------------------------------------
-void ScintillaEditorView::setText (UTF8StringPtr text)
+void ScintillaEditorView::setMouseEnabled (bool enable)
 {
-	sendMessageT (SCI_SETTEXT, 0, text);
+	[impl->view setEditable:enable];
+	CView::setMouseEnabled (enable);
 }
 
 //------------------------------------------------------------------------
-intptr_t ScintillaEditorView::sendMessage (uint32_t message, uintptr_t wParam, intptr_t lParam)
+intptr_t ScintillaEditorView::sendMessage (uint32_t message, uintptr_t wParam,
+                                           intptr_t lParam) const
 {
 	return [impl->view message:message wParam:wParam lParam:lParam];
 }

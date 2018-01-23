@@ -17,6 +17,142 @@
 
 //------------------------------------------------------------------------
 namespace VSTGUI {
+
+//------------------------------------------------------------------------
+void ScintillaEditorView::setFont (const SharedPointer<CFontDesc>& _font)
+{
+	font = _font;
+	if (!font)
+		return;
+	bool isBold = font->getStyle () & kBoldFace;
+	bool isItalic = font->getStyle () & kItalicFace;
+	const auto& fontName = font->getName ();
+	auto fontSize = font->getSize () * static_cast<CCoord> (SC_FONT_SIZE_MULTIPLIER);
+	for (int i = 0; i < 128; i++)
+	{
+		sendMessageT (SCI_STYLESETFONT, i, fontName.data ());
+		sendMessage (SCI_STYLESETSIZEFRACTIONAL, i, fontSize);
+		sendMessage (SCI_STYLESETBOLD, i, isBold);
+		sendMessage (SCI_STYLESETITALIC, i, isItalic);
+	}
+}
+
+//------------------------------------------------------------------------
+SharedPointer<CFontDesc> ScintillaEditorView::getFont () const
+{
+	return font;
+}
+
+//------------------------------------------------------------------------
+bool ScintillaEditorView::canUndo () const
+{
+	return sendMessage (SCI_CANUNDO, 0, 0) != 0;
+}
+
+//------------------------------------------------------------------------
+bool ScintillaEditorView::canRedo () const
+{
+	return sendMessage (SCI_CANREDO, 0, 0) != 0;
+}
+
+//------------------------------------------------------------------------
+void ScintillaEditorView::undo ()
+{
+	sendMessage (SCI_UNDO, 0, 0);
+}
+
+//------------------------------------------------------------------------
+void ScintillaEditorView::redo ()
+{
+	sendMessage (SCI_REDO, 0, 0);
+}
+
+//------------------------------------------------------------------------
+void ScintillaEditorView::setText (UTF8StringPtr text)
+{
+	sendMessageT (SCI_SETTEXT, 0, text);
+}
+
+//------------------------------------------------------------------------
+auto ScintillaEditorView::getSelection () const -> Selection
+{
+	Selection selection {};
+	selection.start = sendMessage (SCI_GETSELECTIONSTART, 0, 0);
+	selection.end = sendMessage (SCI_GETSELECTIONEND, 0, 0);
+	return selection;
+}
+
+//------------------------------------------------------------------------
+void ScintillaEditorView::setSelection (Selection selection)
+{
+	sendMessage (SCI_SETSELECTIONSTART, selection.start, 0);
+	sendMessage (SCI_SETSELECTIONEND, selection.end, 0);
+}
+
+//------------------------------------------------------------------------
+int64_t ScintillaEditorView::findAndSelect (UTF8StringPtr searchString, uint32_t searchFlags)
+{
+	int sciSearchFlags = 0;
+	if (searchFlags & MatchCase)
+		sciSearchFlags |= SCFIND_MATCHCASE;
+	if (searchFlags & WholeWord)
+		sciSearchFlags |= SCFIND_WHOLEWORD;
+	if (searchFlags & WordStart)
+		sciSearchFlags |= SCFIND_WORDSTART;
+
+	auto selection = getSelection ();
+
+	if (!(searchFlags & Backwards))
+		sendMessage (SCI_SETSELECTIONSTART, selection.end, 0);
+	sendMessage (SCI_SEARCHANCHOR, 0, 0);
+
+	intptr_t result;
+	if (searchFlags & Backwards)
+	{
+		result = sendMessageT (SCI_SEARCHPREV, sciSearchFlags, searchString);
+		if (result < 0 && searchFlags & Wrap)
+		{
+			auto textLength = sendMessage (SCI_GETTEXTLENGTH, 0, 0);
+			sendMessage (SCI_SETSELECTIONSTART, textLength, 0);
+			sendMessage (SCI_SETSELECTIONEND, textLength, 0);
+			sendMessage (SCI_SEARCHANCHOR, 0, 0);
+			result = sendMessageT (SCI_SEARCHPREV, sciSearchFlags, searchString);
+		}
+	}
+	else
+	{
+		result = sendMessageT (SCI_SEARCHNEXT, sciSearchFlags, searchString);
+		if (result < 0 && searchFlags & Wrap)
+		{
+			sendMessage (SCI_SETSELECTIONSTART, 0, 0);
+			sendMessage (SCI_SETSELECTIONEND, 0, 0);
+			sendMessage (SCI_SEARCHANCHOR, 0, 0);
+			result = sendMessageT (SCI_SEARCHNEXT, sciSearchFlags, searchString);
+		}
+	}
+	if (result >= 0)
+	{
+		if (searchFlags & ScrollTo)
+		{
+			sendMessage (SCI_SCROLLCARET, 0, 0);
+		}
+		return result;
+	}
+	setSelection (selection);
+
+	return -1;
+}
+
+//------------------------------------------------------------------------
+bool ScintillaEditorView::replaceSelection (UTF8StringPtr string)
+{
+	sendMessageT (SCI_REPLACESEL, 0, string);
+	return true;
+}
+
+//------------------------------------------------------------------------
+//------------------------------------------------------------------------
+//------------------------------------------------------------------------
 using UIViewCreator::stringToColor;
 using UIViewCreator::stringToBitmap;
 using UIViewCreator::bitmapToString;
@@ -90,9 +226,7 @@ public:
 		{
 			if (auto font = desc->getFont (fontName->data ()))
 			{
-				sev->sendMessageT (SCI_STYLESETFONT, STYLE_DEFAULT, font->getName ().data ());
-				sev->sendMessage (SCI_STYLESETSIZEFRACTIONAL, STYLE_DEFAULT,
-				                  font->getSize () * static_cast<CCoord> (SC_FONT_SIZE_MULTIPLIER));
+				sev->setFont (font);
 			}
 		}
 		CPoint p;
@@ -118,19 +252,13 @@ public:
 		}
 		if (attName == kAttrEditorFont)
 		{
-			auto fontNameStrLength = sev->sendMessage (SCI_STYLEGETFONT, STYLE_DEFAULT, 0);
-			if (fontNameStrLength <= 0)
-				return false;
-			auto fontName = std::make_unique<char[]> (fontNameStrLength + 1);
-			sev->sendMessageT (SCI_STYLEGETFONT, STYLE_DEFAULT, fontName.get ());
-			auto fontSize = static_cast<CCoord> (
-			                    sev->sendMessage (SCI_STYLEGETSIZEFRACTIONAL, STYLE_DEFAULT, 0)) /
-			                static_cast<CCoord> (SC_FONT_SIZE_MULTIPLIER);
-			CFontDesc font (fontName.get (), fontSize);
-			if (auto name = desc->lookupFontName (&font))
+			if (auto font = sev->getFont ())
 			{
-				stringValue = name;
-				return true;
+				if (auto name = desc->lookupFontName (font))
+				{
+					stringValue = name;
+					return true;
+				}
 			}
 			return false;
 		}

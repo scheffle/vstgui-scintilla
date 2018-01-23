@@ -3,13 +3,13 @@
 // distribution and at http://github.com/steinbergmedia/vstgui/LICENSE
 
 #include "scintillaeditorview.h"
+#include "vstgui/lib/controls/csearchtextedit.h"
 #include "vstgui/standalone/include/helpers/appdelegate.h"
 #include "vstgui/standalone/include/helpers/uidesc/customization.h"
 #include "vstgui/standalone/include/helpers/windowlistener.h"
 #include "vstgui/standalone/include/iapplication.h"
 #include "vstgui/standalone/include/iuidescwindow.h"
 #include "vstgui/uidescription/delegationcontroller.h"
-#include "vstgui/lib/controls/csearchtextedit.h"
 
 #include "SciLexer.h"
 #include "Scintilla.h"
@@ -18,8 +18,11 @@ using namespace VSTGUI;
 using namespace VSTGUI::Standalone;
 using namespace VSTGUI::Standalone::Application;
 
+static Command FindNextCommand = {CommandGroup::Edit, "Find Next"};
+static Command FindPreviousCommand = {CommandGroup::Edit, "Find Previous"};
+
 //------------------------------------------------------------------------
-class EditorController : public DelegationController
+class EditorController : public DelegationController, public ICommandHandler
 {
 public:
 	EditorController (IController* parent) : DelegationController (parent) {}
@@ -35,9 +38,11 @@ public:
 			editor->sendMessage (SCI_SETMARGINTYPEN, 0, SC_MARGIN_NUMBER);
 			editor->sendMessage (SCI_SETMARGINWIDTHN, 0, 35);
 
-			editor->sendMessage (SCI_STYLESETFORE, SCE_C_COMMENT, toScintillaColor(kGreyCColor));
-			editor->sendMessage (SCI_STYLESETFORE, SCE_C_COMMENTLINE, toScintillaColor(kGreyCColor));
-			editor->sendMessage (SCI_STYLESETFORE, SCE_C_COMMENTDOC, toScintillaColor(kGreyCColor));
+			editor->sendMessage (SCI_STYLESETFORE, SCE_C_COMMENT, toScintillaColor (kGreyCColor));
+			editor->sendMessage (SCI_STYLESETFORE, SCE_C_COMMENTLINE,
+			                     toScintillaColor (kGreyCColor));
+			editor->sendMessage (SCI_STYLESETFORE, SCE_C_COMMENTDOC,
+			                     toScintillaColor (kGreyCColor));
 			editor->sendMessage (SCI_STYLESETFORE, SCE_C_STRING, toScintillaColor (kBlueCColor));
 			editor->sendMessage (SCI_STYLESETFORE, SCE_C_WORD2, toScintillaColor (kBlueCColor));
 		}
@@ -53,8 +58,52 @@ public:
 	{
 		if (control == searchField)
 		{
-			
+			doFind ();
 		}
+	}
+
+	bool canHandleCommand (const Command& command) override
+	{
+		if (command == FindNextCommand || command == FindPreviousCommand)
+			return true;
+		if (command == Commands::Undo)
+			return editor->canUndo ();
+		if (command == Commands::Redo)
+			return editor->canRedo ();
+		return false;
+	}
+	bool handleCommand (const Command& command) override
+	{
+		if (command == FindNextCommand)
+		{
+			doFind ();
+			return true;
+		}
+		if (command == FindPreviousCommand)
+		{
+			doFind (false);
+			return true;
+		}
+		if (command == Commands::Undo)
+		{
+			editor->undo ();
+			return true;
+		}
+		if (command == Commands::Redo)
+		{
+			editor->redo ();
+			return true;
+		}
+		return false;
+	}
+
+	void doFind (bool next = true)
+	{
+		uint32_t flags = ScintillaEditorView::ScrollTo | ScintillaEditorView::Wrap;
+		if (!next)
+			flags |= ScintillaEditorView::Backwards;
+		const auto& text = searchField->getText ();
+		editor->findAndSelect (text.data (), flags);
 	}
 private:
 	ScintillaEditorView* editor {nullptr};
@@ -67,6 +116,9 @@ class MyApplication : public DelegateAdapter, public WindowListenerAdapter
 public:
 	MyApplication () : DelegateAdapter ({"scintilla-example", "1.0.0", "vstgui.examples.scintilla"})
 	{
+		auto& app = IApplication::instance ();
+		app.registerCommand (FindNextCommand, 'g');
+		app.registerCommand (FindPreviousCommand, 'G');
 	}
 
 	void finishLaunching () override
