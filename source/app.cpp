@@ -65,7 +65,7 @@ public:
 	bool canHandleCommand (const Command& command) override
 	{
 		if (command == FindNextCommand || command == FindPreviousCommand)
-			return true;
+			return !searchField->getText ().empty ();
 		if (command == Commands::Undo)
 			return editor->canUndo ();
 		if (command == Commands::Redo)
@@ -116,9 +116,6 @@ class MyApplication : public DelegateAdapter, public WindowListenerAdapter
 public:
 	MyApplication () : DelegateAdapter ({"scintilla-example", "1.0.0", "vstgui.examples.scintilla"})
 	{
-		auto& app = IApplication::instance ();
-		app.registerCommand (FindNextCommand, 'g');
-		app.registerCommand (FindPreviousCommand, 'G');
 	}
 
 	void finishLaunching () override
@@ -145,6 +142,9 @@ public:
 		{
 			IApplication::instance ().quit ();
 		}
+		auto& app = IApplication::instance ();
+		app.registerCommand (FindNextCommand, 'g');
+		app.registerCommand (FindPreviousCommand, 'G');
 	}
 	void onClosed (const IWindow& window) override { IApplication::instance ().quit (); }
 };

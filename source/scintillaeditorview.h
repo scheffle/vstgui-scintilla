@@ -31,10 +31,24 @@ public:
 	ScintillaEditorView ();
 	~ScintillaEditorView () noexcept;
 
+	/** set font for all styles.
+	 *	@param font font
+	 */
 	void setFont (const SharedPointer<CFontDesc>& font);
+	/** get the font for all styles
+	 *	@preturn font previously set with setFont
+	 */
 	SharedPointer<CFontDesc> getFont () const;
 
-	/** set current text. (the same as sendMessage (SCI_SETTEXT, 0, text) */
+	void setBackgroundColor (const CColor& color);
+	CColor getBackgroundColor () const;
+
+	void setSelectionBackgroundColor (const CColor& color);
+	void setSelectionForegroundColor (const CColor& color);
+	CColor getSelectionBackgroundColor () const;
+	CColor getSelectionForegroundColor () const;
+
+	/** set current text. (the same as sendMessageT (SCI_SETTEXT, 0, text) */
 	void setText (UTF8StringPtr text);
 
 	struct Selection
@@ -90,8 +104,11 @@ public:
 
 private:
 	void draw (CDrawContext* pContext) override;
+	void platformSetBackgroundColor (const CColor& color);
 
 	SharedPointer<CFontDesc> font;
+	CColor selectionBackgroundColor {kTransparentCColor};
+	CColor selectionForegroundColor {kTransparentCColor};
 	std::unique_ptr<Impl> impl;
 };
 

@@ -5,7 +5,7 @@ project(vstgui-scintilla)
 
 ##########################################################################################
 if(CMAKE_CONFIGURATION_TYPES)
-	set(CMAKE_CONFIGURATION_TYPES Debug Release ReleaseLTO)
+	set(CMAKE_CONFIGURATION_TYPES Debug Release)
 	set_property(GLOBAL PROPERTY USE_FOLDERS ON)
 endif()
 
@@ -78,6 +78,29 @@ if(CMAKE_HOST_APPLE)
 	)
 
 endif(CMAKE_HOST_APPLE)
+
+##########################################################################################
+if(MSVC)
+    set(${target}_sources
+		${${target}_sources}
+		"source/scintillaeditorview_win32.cpp"
+	)
+
+	set(${target}_resources
+		${${target}_resources}
+		"resource/windows.rc"
+	)
+	set(APP_PROPERTIES
+		LINK_FLAGS "/SUBSYSTEM:windows /INCLUDE:wWinMain"
+	)
+    set(${target}_resources
+		${${target}_resources}
+#		"scintilla/bin/Scintilla.dll"
+	)
+	set(${target}_PLATFORM_LIBS
+#		"scintilla/bin/Scintilla"
+	)
+endif()
 
 add_executable(${target}
 	${${target}_sources}

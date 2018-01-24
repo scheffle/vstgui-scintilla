@@ -113,6 +113,16 @@ void ScintillaEditorView::setMouseEnabled (bool enable)
 }
 
 //------------------------------------------------------------------------
+void ScintillaEditorView::platformSetBackgroundColor (const CColor& color)
+{
+	NSColor* nsColor = [NSColor colorWithRed:color.red / 255.
+	                                   green:color.green / 255.
+	                                    blue:color.blue / 255.
+	                                   alpha:color.alpha / 255.];
+	impl->view.scrollView.contentView.backgroundColor = nsColor;
+}
+
+//------------------------------------------------------------------------
 intptr_t ScintillaEditorView::sendMessage (uint32_t message, uintptr_t wParam,
                                            intptr_t lParam) const
 {

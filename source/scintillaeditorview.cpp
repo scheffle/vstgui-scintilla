@@ -44,6 +44,47 @@ SharedPointer<CFontDesc> ScintillaEditorView::getFont () const
 }
 
 //------------------------------------------------------------------------
+void ScintillaEditorView::setBackgroundColor (const CColor& color)
+{
+	auto sc = toScintillaColor (color);
+	for (auto index = 0; index <= STYLE_DEFAULT; ++index)
+		sendMessage (SCI_STYLESETBACK, index, sc);
+	platformSetBackgroundColor (color);
+}
+
+//------------------------------------------------------------------------
+CColor ScintillaEditorView::getBackgroundColor () const
+{
+	return fromScintillaColor (sendMessage (SCI_STYLEGETBACK, STYLE_DEFAULT, 0));
+}
+
+//------------------------------------------------------------------------
+void ScintillaEditorView::setSelectionBackgroundColor (const CColor& color)
+{
+	bool enable = color != kTransparentCColor;
+	sendMessage (SCI_SETSELBACK, enable, toScintillaColor (color));
+}
+
+//------------------------------------------------------------------------
+void ScintillaEditorView::setSelectionForegroundColor (const CColor& color)
+{
+	bool enable = color != kTransparentCColor;
+	sendMessage (SCI_SETSELFORE, enable, toScintillaColor (color));
+}
+
+//------------------------------------------------------------------------
+CColor ScintillaEditorView::getSelectionBackgroundColor () const
+{
+	return selectionBackgroundColor;
+}
+
+//------------------------------------------------------------------------
+CColor ScintillaEditorView::getSelectionForegroundColor () const
+{
+	return selectionForegroundColor;
+}
+
+//------------------------------------------------------------------------
 bool ScintillaEditorView::canUndo () const
 {
 	return sendMessage (SCI_CANUNDO, 0, 0) != 0;
@@ -163,6 +204,8 @@ static std::string kAttrEditorFont = "editor-font";
 static std::string kAttrEditorMargin = "editor-margin";
 static std::string kAttrLineNumberFontColor = "line-number-font-color";
 static std::string kAttrLineNumberBackgroundColor = "line-number-background-color";
+static std::string kAttrSelectionBackgroundColor = "selection-background-color";
+static std::string kAttrSelectionForegroundColor = "selection-foreground-color";
 
 //-----------------------------------------------------------------------------
 class ScintillaEditorViewCreator : public ViewCreatorAdapter
@@ -181,6 +224,9 @@ public:
 		attributeNames.push_back (kAttrEditorMargin);
 		// font
 		attributeNames.push_back (kAttrEditorFont);
+		// selection
+		attributeNames.push_back (kAttrSelectionBackgroundColor);
+		attributeNames.push_back (kAttrSelectionForegroundColor);
 		// line-number
 		attributeNames.push_back (kAttrLineNumberFontColor);
 		attributeNames.push_back (kAttrLineNumberBackgroundColor);
@@ -194,6 +240,10 @@ public:
 			return kPointType;
 		if (attributeName == kAttrEditorFont)
 			return kFontType;
+		if (attributeName == kAttrSelectionBackgroundColor)
+			return kColorType;
+		if (attributeName == kAttrSelectionForegroundColor)
+			return kColorType;
 		if (attributeName == kAttrLineNumberFontColor)
 			return kColorType;
 		if (attributeName == kAttrLineNumberBackgroundColor)
@@ -208,6 +258,19 @@ public:
 		if (!sev)
 			return false;
 		CColor color;
+		if (stringToColor (attr.getAttributeValue (UIViewCreator::kAttrBackgroundColor), color,
+		                   desc))
+		{
+			sev->setBackgroundColor (color);
+		}
+		if (stringToColor (attr.getAttributeValue (kAttrSelectionBackgroundColor), color, desc))
+		{
+			sev->setSelectionBackgroundColor (color);
+		}
+		if (stringToColor (attr.getAttributeValue (kAttrSelectionForegroundColor), color, desc))
+		{
+			sev->setSelectionForegroundColor (color);
+		}
 		if (stringToColor (attr.getAttributeValue (kAttrLineNumberFontColor), color, desc))
 		{
 			sev->sendMessage (SCI_STYLESETFORE, STYLE_LINENUMBER, toScintillaColor (color));
@@ -215,12 +278,6 @@ public:
 		if (stringToColor (attr.getAttributeValue (kAttrLineNumberBackgroundColor), color, desc))
 		{
 			sev->sendMessage (SCI_STYLESETBACK, STYLE_LINENUMBER, toScintillaColor (color));
-		}
-		if (stringToColor (attr.getAttributeValue (UIViewCreator::kAttrBackgroundColor), color,
-		                   desc))
-		{
-			for (auto index = 0; index <= STYLE_DEFAULT; ++index)
-				sev->sendMessage (SCI_STYLESETBACK, index, toScintillaColor (color));
 		}
 		if (auto fontName = attr.getAttributeValue (kAttrEditorFont))
 		{
@@ -252,15 +309,22 @@ public:
 		}
 		if (attName == kAttrEditorFont)
 		{
-			if (auto font = sev->getFont ())
+			if (auto name = desc->lookupFontName (sev->getFont ()))
 			{
-				if (auto name = desc->lookupFontName (font))
-				{
-					stringValue = name;
-					return true;
-				}
+				stringValue = name;
+				return true;
 			}
 			return false;
+		}
+		if (attName == kAttrSelectionBackgroundColor)
+		{
+			auto color = sev->getSelectionBackgroundColor ();
+			return colorToString (color, stringValue, desc);
+		}
+		if (attName == kAttrSelectionForegroundColor)
+		{
+			auto color = sev->getSelectionForegroundColor ();
+			return colorToString (color, stringValue, desc);
 		}
 		if (attName == kAttrLineNumberFontColor)
 		{
@@ -276,7 +340,7 @@ public:
 		}
 		if (attName == UIViewCreator::kAttrBackgroundColor)
 		{
-			auto color = fromScintillaColor (sev->sendMessage (SCI_STYLEGETBACK, STYLE_DEFAULT, 0));
+			auto color = sev->getBackgroundColor ();
 			return colorToString (color, stringValue, desc);
 		}
 
