@@ -44,6 +44,26 @@ SharedPointer<CFontDesc> ScintillaEditorView::getFont () const
 }
 
 //------------------------------------------------------------------------
+void ScintillaEditorView::setStaticFontColor (const CColor& color)
+{
+	if (color == kTransparentCColor)
+	{
+	}
+	else
+	{
+		auto sc = toScintillaColor (color);
+		for (auto index = 0; index <= STYLE_DEFAULT; ++index)
+			sendMessage (SCI_STYLESETFORE, index, sc);
+	}
+}
+
+//------------------------------------------------------------------------
+CColor ScintillaEditorView::getStaticFontColor () const
+{
+	return fromScintillaColor (sendMessage (SCI_STYLEGETFORE, STYLE_DEFAULT, 0));
+}
+
+//------------------------------------------------------------------------
 void ScintillaEditorView::setBackgroundColor (const CColor& color)
 {
 	auto sc = toScintillaColor (color);
@@ -192,6 +212,46 @@ bool ScintillaEditorView::replaceSelection (UTF8StringPtr string)
 }
 
 //------------------------------------------------------------------------
+void ScintillaEditorView::setUseTabs (bool state)
+{
+	sendMessage (SCI_SETUSETABS, state, 0);
+}
+
+//------------------------------------------------------------------------
+bool ScintillaEditorView::getUseTabs () const
+{
+	return sendMessage (SCI_GETUSETABS, 0, 0) != 0;
+}
+
+//------------------------------------------------------------------------
+void ScintillaEditorView::setTabWidth (uint32_t width)
+{
+	sendMessage (SCI_SETTABWIDTH, width, 0);
+}
+
+//------------------------------------------------------------------------
+uint32_t ScintillaEditorView::getTabWidth () const
+{
+	return static_cast<uint32_t> (sendMessage (SCI_GETTABWIDTH, 0, 0));
+}
+
+//------------------------------------------------------------------------
+void ScintillaEditorView::setLexerLanguage (IdStringPtr lang)
+{
+	sendMessageT (SCI_SETLEXERLANGUAGE, 0, lang);
+}
+
+//------------------------------------------------------------------------
+std::string ScintillaEditorView::getLexerLanguage () const
+{
+	std::string result;
+	auto length = sendMessage (SCI_GETLEXERLANGUAGE, 0, 0);
+	result.resize (length);
+	sendMessageT (SCI_GETLEXERLANGUAGE, 0, result.data ());
+	return result;
+}
+
+//------------------------------------------------------------------------
 //------------------------------------------------------------------------
 //------------------------------------------------------------------------
 using UIViewCreator::stringToColor;
@@ -206,6 +266,9 @@ static std::string kAttrLineNumberFontColor = "line-number-font-color";
 static std::string kAttrLineNumberBackgroundColor = "line-number-background-color";
 static std::string kAttrSelectionBackgroundColor = "selection-background-color";
 static std::string kAttrSelectionForegroundColor = "selection-foreground-color";
+static std::string kAttrUseTabs = "use-tabs";
+static std::string kAttrTabWidth = "tab-width";
+static std::string kAttrLexer = "lexer";
 
 //-----------------------------------------------------------------------------
 class ScintillaEditorViewCreator : public ViewCreatorAdapter
@@ -221,9 +284,13 @@ public:
 	}
 	bool getAttributeNames (std::list<std::string>& attributeNames) const override
 	{
+		// lexer
+		attributeNames.push_back (kAttrLexer);
+		// margin
 		attributeNames.push_back (kAttrEditorMargin);
 		// font
 		attributeNames.push_back (kAttrEditorFont);
+		attributeNames.push_back (UIViewCreator::kAttrFontColor);
 		// selection
 		attributeNames.push_back (kAttrSelectionBackgroundColor);
 		attributeNames.push_back (kAttrSelectionForegroundColor);
@@ -232,14 +299,21 @@ public:
 		attributeNames.push_back (kAttrLineNumberBackgroundColor);
 		// other
 		attributeNames.push_back (UIViewCreator::kAttrBackgroundColor);
+		// tabs
+		attributeNames.push_back (kAttrUseTabs);
+		attributeNames.push_back (kAttrTabWidth);
 		return true;
 	}
 	AttrType getAttributeType (const std::string& attributeName) const override
 	{
+		if (attributeName == kAttrLexer)
+			return kStringType;
 		if (attributeName == kAttrEditorMargin)
 			return kPointType;
 		if (attributeName == kAttrEditorFont)
 			return kFontType;
+		if (attributeName == UIViewCreator::kAttrFontColor)
+			return kColorType;
 		if (attributeName == kAttrSelectionBackgroundColor)
 			return kColorType;
 		if (attributeName == kAttrSelectionForegroundColor)
@@ -250,6 +324,10 @@ public:
 			return kColorType;
 		if (attributeName == UIViewCreator::kAttrBackgroundColor)
 			return kColorType;
+		if (attributeName == kAttrUseTabs)
+			return kBooleanType;
+		if (attributeName == kAttrTabWidth)
+			return kIntegerType;
 		return kUnknownType;
 	}
 	bool apply (CView* view, const UIAttributes& attr, const IUIDescription* desc) const override
@@ -257,6 +335,10 @@ public:
 		auto sev = dynamic_cast<ScintillaEditorView*> (view);
 		if (!sev)
 			return false;
+		if (auto lang = attr.getAttributeValue (kAttrLexer))
+		{
+			sev->setLexerLanguage (lang->data ());
+		}
 		CColor color;
 		if (stringToColor (attr.getAttributeValue (UIViewCreator::kAttrBackgroundColor), color,
 		                   desc))
@@ -286,6 +368,20 @@ public:
 				sev->setFont (font);
 			}
 		}
+		if (stringToColor (attr.getAttributeValue (UIViewCreator::kAttrFontColor), color, desc))
+		{
+			sev->setStaticFontColor (color);
+		}
+		bool b;
+		if (attr.getBooleanAttribute (kAttrUseTabs, b))
+		{
+			sev->setUseTabs (b);
+		}
+		int32_t i;
+		if (attr.getIntegerAttribute (kAttrTabWidth, i))
+		{
+			sev->setTabWidth (static_cast<uint32_t> (i));
+		}
 		CPoint p;
 		if (attr.getPointAttribute (kAttrEditorMargin, p))
 		{
@@ -300,6 +396,11 @@ public:
 		auto sev = dynamic_cast<ScintillaEditorView*> (view);
 		if (!sev)
 			return false;
+		if (attName == kAttrLexer)
+		{
+			stringValue = sev->getLexerLanguage ();
+			return true;
+		}
 		if (attName == kAttrEditorMargin)
 		{
 			CPoint p;
@@ -342,6 +443,21 @@ public:
 		{
 			auto color = sev->getBackgroundColor ();
 			return colorToString (color, stringValue, desc);
+		}
+		if (attName == UIViewCreator::kAttrFontColor)
+		{
+			auto color = sev->getStaticFontColor ();
+			return colorToString (color, stringValue, desc);
+		}
+		if (attName == kAttrUseTabs)
+		{
+			stringValue = sev->getUseTabs () ? "true" : "false";
+			return true;
+		}
+		if (attName == kAttrTabWidth)
+		{
+			stringValue = std::to_string (sev->getTabWidth ());
+			return true;
 		}
 
 		return false;

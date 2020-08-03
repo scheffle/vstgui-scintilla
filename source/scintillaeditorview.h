@@ -36,9 +36,12 @@ public:
 	 */
 	void setFont (const SharedPointer<CFontDesc>& font);
 	/** get the font for all styles
-	 *	@preturn font previously set with setFont
+	 *	@return font previously set with setFont
 	 */
 	SharedPointer<CFontDesc> getFont () const;
+
+	void setStaticFontColor (const CColor& color);
+	CColor getStaticFontColor () const;
 
 	void setBackgroundColor (const CColor& color);
 	CColor getBackgroundColor () const;
@@ -51,6 +54,8 @@ public:
 	/** set current text. (the same as sendMessageT (SCI_SETTEXT, 0, text) */
 	void setText (UTF8StringPtr text);
 
+	// ------------------------------------
+	// Selection
 	struct Selection
 	{
 		int64_t start;
@@ -61,6 +66,8 @@ public:
 	void setSelection (Selection selection);
 	bool replaceSelection (UTF8StringPtr string);
 
+	// ------------------------------------
+	// Search
 	enum SearchFlags
 	{
 		MatchCase = 1 << 0,
@@ -77,11 +84,25 @@ public:
 	 */
 	int64_t findAndSelect (UTF8StringPtr searchString, uint32_t searchFlags);
 
+	// ------------------------------------
+	// Undo/Redo
 	bool canUndo () const;
 	bool canRedo () const;
 	void undo ();
 	void redo ();
 
+	// ------------------------------------
+	// Tabs/Indentation
+	void setUseTabs (bool state);
+	bool getUseTabs () const;
+	void setTabWidth (uint32_t width);
+	uint32_t getTabWidth () const;
+
+	// ------------------------------------
+	// Tabs/Indentation
+	void setLexerLanguage (IdStringPtr lang);
+	std::string getLexerLanguage () const;
+	
 	/** send a message to the scintilla backend */
 	intptr_t sendMessage (uint32_t message, uintptr_t wParam, intptr_t lParam) const;
 
@@ -109,6 +130,7 @@ private:
 	SharedPointer<CFontDesc> font;
 	CColor selectionBackgroundColor {kTransparentCColor};
 	CColor selectionForegroundColor {kTransparentCColor};
+	CColor staticFontColor {kTransparentCColor};
 	std::unique_ptr<Impl> impl;
 };
 

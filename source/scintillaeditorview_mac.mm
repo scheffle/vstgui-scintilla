@@ -25,8 +25,9 @@ namespace {
 //------------------------------------------------------------------------
 void releaseObject (NSObject* obj)
 {
-	// we can check for ARC here and just do nothing
+#if !__has_feature(objc_arc)
 	[obj release];
+#endif
 }
 
 //------------------------------------------------------------------------
