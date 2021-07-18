@@ -55,7 +55,7 @@ public:
 	CColor getSelectionBackgroundColor () const;
 	CColor getSelectionForegroundColor () const;
 
-	/** set current text. (the same as sendMessageT (SCI_SETTEXT, 0, text) */
+	/** set current text. (the same as sendMessage (SCI_SETTEXT, 0, text) */
 	void setText (UTF8StringPtr text);
 
 	// ------------------------------------
@@ -112,7 +112,7 @@ public:
 	intptr_t sendMessage (uint32_t message, uintptr_t wParam, intptr_t lParam) const;
 
 	template <typename MT, typename T>
-	intptr_t sendMessageT (MT message, uintptr_t wParam, T lParam) const
+	intptr_t sendMessage (MT message, uintptr_t wParam, T lParam) const
 	{
 		if constexpr (std::is_floating_point_v<T> || std::is_integral_v<T>)
 			return sendMessage (static_cast<uint32_t> (message), wParam, static_cast<intptr_t> (lParam));
@@ -121,7 +121,7 @@ public:
 	}
 
 	template <typename MT>
-	intptr_t sendMessageT (MT message, uintptr_t wParam = 0) const
+	intptr_t sendMessage (MT message, uintptr_t wParam = 0) const
 	{
 		return sendMessage (static_cast<uint32_t> (message), wParam, 0);
 	}
