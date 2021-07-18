@@ -58,6 +58,9 @@ public:
 	/** set current text. (the same as sendMessage (SCI_SETTEXT, 0, text) */
 	void setText (UTF8StringPtr text);
 
+	void setCaretColor (const CColor& color);
+	CColor getCaretColor () const;
+
 	// ------------------------------------
 	// Selection
 	struct Selection
@@ -103,6 +106,11 @@ public:
 	uint32_t getTabWidth () const;
 
 	// ------------------------------------
+	// Line Numbers
+	void setLineNumbersVisible (bool state);
+	bool getLineNumbersVisible () const;
+
+	// ------------------------------------
 	// Lexer
 	void setLexerLanguage (IdStringPtr lang);
 	std::string getLexerLanguage () const;
@@ -111,19 +119,13 @@ public:
 	/** send a message to the scintilla backend */
 	intptr_t sendMessage (uint32_t message, uintptr_t wParam, intptr_t lParam) const;
 
-	template <typename MT, typename T>
-	intptr_t sendMessage (MT message, uintptr_t wParam, T lParam) const
+	template <typename MT, typename WPARAMT = uintptr_t, typename LPARAMT = intptr_t>
+	intptr_t sendMessage (MT message, WPARAMT wParam = 0, LPARAMT lParam = 0) const
 	{
-		if constexpr (std::is_floating_point_v<T> || std::is_integral_v<T>)
-			return sendMessage (static_cast<uint32_t> (message), wParam, static_cast<intptr_t> (lParam));
+		if constexpr (std::is_arithmetic_v<LPARAMT>)
+			return sendMessage (static_cast<uint32_t> (message), static_cast<uintptr_t> (wParam), static_cast<intptr_t> (lParam));
 		else
-		return sendMessage (static_cast<uint32_t> (message), wParam, reinterpret_cast<intptr_t> (lParam));
-	}
-
-	template <typename MT>
-	intptr_t sendMessage (MT message, uintptr_t wParam = 0) const
-	{
-		return sendMessage (static_cast<uint32_t> (message), wParam, 0);
+		return sendMessage (static_cast<uint32_t> (message), static_cast<uintptr_t> (wParam), reinterpret_cast<intptr_t> (lParam));
 	}
 
 	void registerListener (IScintillaListener* listener);
@@ -156,17 +158,19 @@ inline intptr_t toScintillaColor (const CColor& c)
 	int32_t red = static_cast<int32_t> (c.red);
 	int32_t green = static_cast<int32_t> (c.green);
 	int32_t blue = static_cast<int32_t> (c.blue);
-	return (blue << 16) + (green << 8) + red;
+	int32_t alpha = static_cast<int32_t> (c.alpha);
+	return (alpha << 24) + (blue << 16) + (green << 8) + red;
 }
 
 //------------------------------------------------------------------------
 inline CColor fromScintillaColor (intptr_t v)
 {
+	int32_t alpha = (v & 0xFF000000) >> 24;
 	int32_t blue = (v & 0x00FF0000) >> 16;
 	int32_t green = (v & 0x0000FF00) >> 8;
 	int32_t red = v & 0x000000FF;
 	return CColor (static_cast<uint8_t> (red), static_cast<uint8_t> (green),
-	               static_cast<uint8_t> (blue));
+	               static_cast<uint8_t> (blue), static_cast<uint8_t> (alpha));
 }
 
 //------------------------------------------------------------------------

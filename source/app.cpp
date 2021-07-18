@@ -32,9 +32,6 @@ public:
 		if (auto ed = dynamic_cast<ScintillaEditorView*> (view))
 		{
 			editor = ed;
-			editor->sendMessage (SCI_SETMARGINS, 1, 0);
-			editor->sendMessage (SCI_SETMARGINTYPEN, 0, SC_MARGIN_NUMBER);
-			editor->sendMessage (SCI_SETMARGINWIDTHN, 0, 35);
 #if 0
 			editor->sendMessage (SCI_STYLESETFORE, SCE_C_COMMENT, toScintillaColor (kGreyCColor));
 			editor->sendMessage (SCI_STYLESETFORE, SCE_C_COMMENTLINE,

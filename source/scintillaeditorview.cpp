@@ -14,6 +14,8 @@
 #include "vstgui/uidescription/uiviewfactory.h"
 
 #include "ScintillaMessages.h"
+#include "ScintillaTypes.h"
+#include "ScintillaCall.h"
 #include "Scintilla.h"
 #include "ILexer.h"
 #include "Lexilla.h"
@@ -22,6 +24,8 @@
 //------------------------------------------------------------------------
 namespace VSTGUI {
 using Message = Scintilla::Message;
+using StylesCommon = Scintilla::StylesCommon;
+using Element = Scintilla::Element;
 
 //------------------------------------------------------------------------
 void ScintillaEditorView::setFont (const SharedPointer<CFontDesc>& _font)
@@ -65,7 +69,7 @@ void ScintillaEditorView::setStaticFontColor (const CColor& color)
 //------------------------------------------------------------------------
 CColor ScintillaEditorView::getStaticFontColor () const
 {
-	return fromScintillaColor (sendMessage (Message::StyleGetFore, STYLE_DEFAULT));
+	return fromScintillaColor (sendMessage (Message::StyleGetFore, StylesCommon::Default));
 }
 
 //------------------------------------------------------------------------
@@ -80,21 +84,21 @@ void ScintillaEditorView::setBackgroundColor (const CColor& color)
 //------------------------------------------------------------------------
 CColor ScintillaEditorView::getBackgroundColor () const
 {
-	return fromScintillaColor (sendMessage (Message::StyleGetBack, STYLE_DEFAULT));
+	return fromScintillaColor (sendMessage (Message::StyleGetBack, StylesCommon::Default));
 }
 
 //------------------------------------------------------------------------
 void ScintillaEditorView::setSelectionBackgroundColor (const CColor& color)
 {
 	bool enable = color != kTransparentCColor;
-	sendMessage (Message::SetSelBack, enable, toScintillaColor (color));
+	sendMessage (Message::SetElementColour, Element::SelectionBack, toScintillaColor (color));
 }
 
 //------------------------------------------------------------------------
 void ScintillaEditorView::setSelectionForegroundColor (const CColor& color)
 {
 	bool enable = color != kTransparentCColor;
-	sendMessage (Message::SetSelFore, enable, toScintillaColor (color));
+	sendMessage (Message::SetElementColour, Element::SelectionText, toScintillaColor (color));
 }
 
 //------------------------------------------------------------------------
@@ -107,6 +111,18 @@ CColor ScintillaEditorView::getSelectionBackgroundColor () const
 CColor ScintillaEditorView::getSelectionForegroundColor () const
 {
 	return selectionForegroundColor;
+}
+
+//------------------------------------------------------------------------
+void ScintillaEditorView::setCaretColor (const CColor& color)
+{
+	sendMessage (Message::SetElementColour, Element::Caret, toScintillaColor (color));
+}
+
+//------------------------------------------------------------------------
+CColor ScintillaEditorView::getCaretColor () const
+{
+	return fromScintillaColor (sendMessage (Message::GetElementColour, Element::Caret));
 }
 
 //------------------------------------------------------------------------
@@ -266,6 +282,34 @@ std::string ScintillaEditorView::getLexerLanguage () const
 }
 
 //------------------------------------------------------------------------
+void ScintillaEditorView::setLineNumbersVisible (bool state)
+{
+	sendMessage (Message::SetMargins, state ? 1 : 0);
+	if (state)
+	{
+		sendMessage (Message::SetMarginTypeN, 0, SC_MARGIN_NUMBER);
+		auto width = sendMessage (Message::TextWidth, StylesCommon::LineNumber, "_99999");
+		sendMessage (Message::SetMarginWidthN, 0, width);
+	}
+	else
+	{
+		sendMessage (Message::SetMarginWidthN, 0, 0);
+		// the following is a workaround so that the margins are removed immediately on macOS
+		auto size = getViewSize ();
+		size.right--;
+		setViewSize (size, false);
+		size.right++;
+		setViewSize (size, false);
+	}
+}
+
+//------------------------------------------------------------------------
+bool ScintillaEditorView::getLineNumbersVisible () const
+{
+	return sendMessage (Message::GetMargins) != 0;
+}
+
+//------------------------------------------------------------------------
 //------------------------------------------------------------------------
 //------------------------------------------------------------------------
 using UIViewCreator::stringToColor;
@@ -280,6 +324,7 @@ static std::string kAttrLineNumberFontColor = "line-number-font-color";
 static std::string kAttrLineNumberBackgroundColor = "line-number-background-color";
 static std::string kAttrSelectionBackgroundColor = "selection-background-color";
 static std::string kAttrSelectionForegroundColor = "selection-foreground-color";
+static std::string kAttrShowLineNumbers = "show-line-numbers";
 static std::string kAttrUseTabs = "use-tabs";
 static std::string kAttrTabWidth = "tab-width";
 static std::string kAttrLexer = "lexer";
@@ -309,6 +354,7 @@ public:
 		attributeNames.push_back (kAttrSelectionBackgroundColor);
 		attributeNames.push_back (kAttrSelectionForegroundColor);
 		// line-number
+		attributeNames.push_back (kAttrShowLineNumbers);
 		attributeNames.push_back (kAttrLineNumberFontColor);
 		attributeNames.push_back (kAttrLineNumberBackgroundColor);
 		// other
@@ -332,6 +378,8 @@ public:
 			return kColorType;
 		if (attributeName == kAttrSelectionForegroundColor)
 			return kColorType;
+		if (attributeName == kAttrShowLineNumbers)
+			return kBooleanType;
 		if (attributeName == kAttrLineNumberFontColor)
 			return kColorType;
 		if (attributeName == kAttrLineNumberBackgroundColor)
@@ -369,11 +417,11 @@ public:
 		}
 		if (stringToColor (attr.getAttributeValue (kAttrLineNumberFontColor), color, desc))
 		{
-			sev->sendMessage (Message::StyleSetFore, STYLE_LINENUMBER, toScintillaColor (color));
+			sev->sendMessage (Message::StyleSetFore, StylesCommon::LineNumber, toScintillaColor (color));
 		}
 		if (stringToColor (attr.getAttributeValue (kAttrLineNumberBackgroundColor), color, desc))
 		{
-			sev->sendMessage (Message::StyleSetBack, STYLE_LINENUMBER, toScintillaColor (color));
+			sev->sendMessage (Message::StyleSetBack, StylesCommon::LineNumber, toScintillaColor (color));
 		}
 		if (auto fontName = attr.getAttributeValue (kAttrEditorFont))
 		{
@@ -385,11 +433,16 @@ public:
 		if (stringToColor (attr.getAttributeValue (UIViewCreator::kAttrFontColor), color, desc))
 		{
 			sev->setStaticFontColor (color);
+			sev->setCaretColor (color);
 		}
 		bool b;
 		if (attr.getBooleanAttribute (kAttrUseTabs, b))
 		{
 			sev->setUseTabs (b);
+		}
+		if (attr.getBooleanAttribute(kAttrShowLineNumbers, b))
+		{
+			sev->setLineNumbersVisible (b);
 		}
 		int32_t i;
 		if (attr.getIntegerAttribute (kAttrTabWidth, i))
@@ -445,13 +498,13 @@ public:
 		if (attName == kAttrLineNumberFontColor)
 		{
 			auto color =
-			    fromScintillaColor (sev->sendMessage (Message::StyleGetFore, STYLE_LINENUMBER));
+			    fromScintillaColor (sev->sendMessage (Message::StyleGetFore, StylesCommon::LineNumber));
 			return colorToString (color, stringValue, desc);
 		}
 		if (attName == kAttrLineNumberBackgroundColor)
 		{
 			auto color =
-			    fromScintillaColor (sev->sendMessage (Message::StyleGetBack, STYLE_LINENUMBER));
+			    fromScintillaColor (sev->sendMessage (Message::StyleGetBack, StylesCommon::LineNumber));
 			return colorToString (color, stringValue, desc);
 		}
 		if (attName == UIViewCreator::kAttrBackgroundColor)
@@ -463,6 +516,11 @@ public:
 		{
 			auto color = sev->getStaticFontColor ();
 			return colorToString (color, stringValue, desc);
+		}
+		if (attName == kAttrShowLineNumbers)
+		{
+			stringValue = sev->getLineNumbersVisible () ? "true" : "false";
+			return true;
 		}
 		if (attName == kAttrUseTabs)
 		{
