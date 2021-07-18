@@ -11,7 +11,6 @@
 #include "vstgui/standalone/include/iuidescwindow.h"
 #include "vstgui/uidescription/delegationcontroller.h"
 
-#include "SciLexer.h"
 #include "Scintilla.h"
 
 using namespace VSTGUI;
@@ -36,7 +35,7 @@ public:
 			editor->sendMessage (SCI_SETMARGINS, 1, 0);
 			editor->sendMessage (SCI_SETMARGINTYPEN, 0, SC_MARGIN_NUMBER);
 			editor->sendMessage (SCI_SETMARGINWIDTHN, 0, 35);
-
+#if 0
 			editor->sendMessage (SCI_STYLESETFORE, SCE_C_COMMENT, toScintillaColor (kGreyCColor));
 			editor->sendMessage (SCI_STYLESETFORE, SCE_C_COMMENTLINE,
 			                     toScintillaColor (kGreyCColor));
@@ -44,6 +43,7 @@ public:
 			                     toScintillaColor (kGreyCColor));
 			editor->sendMessage (SCI_STYLESETFORE, SCE_C_STRING, toScintillaColor (kBlueCColor));
 			editor->sendMessage (SCI_STYLESETFORE, SCE_C_WORD2, toScintillaColor (kBlueCColor));
+#endif
 		}
 		else if (auto sf = dynamic_cast<CSearchTextEdit*> (view))
 		{

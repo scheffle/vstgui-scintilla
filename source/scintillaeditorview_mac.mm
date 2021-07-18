@@ -54,6 +54,8 @@ ScintillaEditorView::ScintillaEditorView () : CView (CRect (0, 0, 0, 0))
 //------------------------------------------------------------------------
 ScintillaEditorView::~ScintillaEditorView () noexcept
 {
+	if (impl->view)
+		impl->view.delegate = nil;
 	releaseObject (impl->view);
 	releaseObject (impl->delegate);
 }
@@ -147,6 +149,8 @@ void ScintillaEditorView::unregisterListener (IScintillaListener* listener)
 
 //------------------------------------------------------------------------
 @implementation VSTGUI_ScintillaView_Delegate
+
+//------------------------------------------------------------------------
 - (void)notification:(SCNotification*)notification
 {
 	self.impl->listeners.forEach (

@@ -1,33 +1,217 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<vstgui-ui-description version="1">
-	<fonts>
-		<font font-name="Menlo" name="EditorFont" size="12"/>
-	</fonts>
-	<colors>
-		<color name="WindowBackground" rgba="#4f4f4fff"/>
-		<color name="font" rgba="#f8f8f800"/>
-		<color name="linenumber.background" rgba="#000000ff"/>
-		<color name="linenumber.font" rgba="#ffffffff"/>
-		<color name="selection.background" rgba="#698dffff"/>
-		<color name="selection.foreground" rgba="#ffffffff"/>
-	</colors>
-	<template autosize="left right top bottom " background-color="WindowBackground" background-color-draw-style="filled and stroked" class="CViewContainer" mouse-enabled="true" name="Editor" opacity="1" origin="0, 0" size="650, 470" sub-controller="EditorController" transparent="false" wants-focus="false">
-		<view autosize="left right top bottom " background-color="WindowBackground" class="ScintillaEditorView" editor-font="EditorFont" editor-margin="10, 10" font-color="font" lexer="cpp" line-number-background-color="linenumber.background" line-number-font-color="linenumber.font" mouse-enabled="true" opacity="1" origin="20, 50" selection-background-color="selection.background" selection-foreground-color="selection.foreground" size="610, 400" tab-width="4" transparent="false" use-tabs="true" wants-focus="true"/>
-		<view autosize="right top " back-color="~ BlackCColor" background-offset="0, 0" class="CSearchTextEdit" clearmark-inset="5, 5" default-value="0.5" font="~ NormalFont" font-antialias="true" font-color="~ WhiteCColor" frame-color="~ GreyCColor" frame-width="-1" immediate-text-change="false" max-value="1" min-value="0" mouse-enabled="true" opacity="1" origin="420, 10" placeholder-title="Search" round-rect-radius="3" secure-style="false" shadow-color="~ RedCColor" size="210, 20" style-3D-in="false" style-3D-out="false" style-doubleclick="false" style-no-draw="false" style-no-frame="false" style-no-text="false" style-round-rect="true" style-shadow-text="false" text-alignment="left" text-inset="5, 0" text-rotation="0" text-shadow-offset="1, 1" transparent="false" value-precision="2" wants-focus="true" wheel-inc-value="0.1"/>
-		<view autosize="right top " autosize-to-fit="false" boxfill-color="~ WhiteCColor" boxframe-color="~ BlackCColor" checkmark-color="~ BlackCColor" class="CCheckBox" default-value="0.5" draw-crossbox="true" font="~ NormalFontVerySmall" font-color="~ BlackCColor" frame-width="1" max-value="1" min-value="0" mouse-enabled="true" opacity="1" origin="420, 30" round-rect-radius="2" size="68.019, 15" title="Match Case" transparent="false" wants-focus="true" wheel-inc-value="0.1"/>
-		<view autosize="right top " autosize-to-fit="false" boxfill-color="~ WhiteCColor" boxframe-color="~ BlackCColor" checkmark-color="~ BlackCColor" class="CCheckBox" default-value="0.5" draw-crossbox="true" font="~ NormalFontVerySmall" font-color="~ BlackCColor" frame-width="1" max-value="1" min-value="0" mouse-enabled="true" opacity="1" origin="495, 30" round-rect-radius="2" size="68.019, 15" title="Whole Word" transparent="false" wants-focus="true" wheel-inc-value="0.1"/>
-		<view autosize="right top " autosize-to-fit="false" boxfill-color="~ WhiteCColor" boxframe-color="~ BlackCColor" checkmark-color="~ BlackCColor" class="CCheckBox" default-value="0.5" draw-crossbox="true" font="~ NormalFontVerySmall" font-color="~ BlackCColor" frame-width="1" max-value="1" min-value="0" mouse-enabled="true" opacity="1" origin="565, 30" round-rect-radius="2" size="68.019, 15" title="Word Start" transparent="false" wants-focus="true" wheel-inc-value="0.1"/>
-	</template>
-	<custom>
-		<attributes name="UIDescFilePath" path="/Users/scheffle/git/vstgui-scintilla/resource/Editor.uidesc"/>
-		<attributes Size="5, 5" name="UIGridController"/>
-		<attributes SelectedTemplate="Editor" name="UITemplateController"/>
-		<attributes EditViewScale="1" EditorSize="0, 0, 1099, 863" SplitViewSize_0_0="0.7025089605734766706746086128987371921539" SplitViewSize_0_1="0.2735961768219832834780902430793503299356" SplitViewSize_1_0="0.491039426523297517501731590527924709022" SplitViewSize_1_1="0.5029868578255675126698065469099674373865" SplitViewSize_2_0="0.6960873521383075246404814606648869812489" SplitViewSize_2_1="0.299363057324840753370409629496862180531" TabSwitchValue="2" Version="1" name="UIEditController"/>
-		<attributes name="UIAttributesController"/>
-		<attributes SelectedRow="2" name="UIViewCreatorDataSource"/>
-		<attributes SelectedRow="1" name="UIColorsDataSource"/>
-		<attributes SelectedRow="0" name="UIFontsDataSource"/>
-	</custom>
-	<bitmaps/>
-	<control-tags/>
-</vstgui-ui-description>
+{
+	"vstgui-ui-description": {
+		"version": "1",
+		"bitmaps": {},
+		"fonts": {
+			"EditorFont": {
+				"font-name": "Menlo",
+				"size": "12"
+			}
+		},
+		"colors": {
+			"WindowBackground": "#4f4f4fff",
+			"font": "#f8f8f800",
+			"linenumber.background": "#000000ff",
+			"linenumber.font": "#ffffffff",
+			"selection.background": "#698dffff",
+			"selection.foreground": "#ffffffff"
+		},
+		"control-tags": {},
+		"custom": {
+			"UIDescFilePath": {
+				"path": "/Users/scheffle/Source/vstgui-scintilla/resource/Editor.uidesc"
+			},
+			"UIGridController": {
+				"Grids": "1x 1,5x 5,10x 10,12x 12,15x 15",
+				"Size": "5, 5"
+			},
+			"UITemplateController": {
+				"SelectedTemplate": "Editor"
+			},
+			"UIEditController": {
+				"EditViewScale": "1",
+				"EditorSize": "0, 0, 1099, 863",
+				"SplitViewSize_0_0": "0.7025089605734766706746086128987371921539",
+				"SplitViewSize_0_1": "0.2735961768219832834780902430793503299356",
+				"SplitViewSize_1_0": "0.491039426523297517501731590527924709022",
+				"SplitViewSize_1_1": "0.5029868578255675126698065469099674373865",
+				"SplitViewSize_2_0": "0.6960873521383075246404814606648869812489",
+				"SplitViewSize_2_1": "0.299363057324840753370409629496862180531",
+				"TabSwitchValue": "2",
+				"Version": "1"
+			},
+			"UIAttributesController": {},
+			"UIViewCreatorDataSource": {
+				"SelectedRow": "2"
+			},
+			"UIColorsDataSource": {
+				"SelectedRow": "2"
+			},
+			"UIFontsDataSource": {
+				"SelectedRow": "0"
+			}
+		},
+		"templates": {
+			"Editor": {
+				"attributes": {
+					"autosize": "left right top bottom ",
+					"background-color": "WindowBackground",
+					"background-color-draw-style": "filled and stroked",
+					"class": "CViewContainer",
+					"mouse-enabled": "true",
+					"opacity": "1",
+					"origin": "0, 0",
+					"size": "650, 470",
+					"sub-controller": "EditorController",
+					"transparent": "false",
+					"wants-focus": "false"
+				},
+				"children": {
+					"ScintillaEditorView": {
+						"attributes": {
+							"autosize": "left right top bottom ",
+							"background-color": "WindowBackground",
+							"class": "ScintillaEditorView",
+							"editor-font": "EditorFont",
+							"editor-margin": "10, 10",
+							"font-color": "font",
+							"lexer": "cpp",
+							"line-number-background-color": "linenumber.background",
+							"line-number-font-color": "linenumber.font",
+							"mouse-enabled": "true",
+							"opacity": "1",
+							"origin": "20, 50",
+							"selection-background-color": "selection.background",
+							"selection-foreground-color": "selection.foreground",
+							"size": "610, 400",
+							"tab-width": "4",
+							"transparent": "false",
+							"use-tabs": "true",
+							"wants-focus": "true"
+						}
+					},
+					"CSearchTextEdit": {
+						"attributes": {
+							"autosize": "right top ",
+							"back-color": "~ BlackCColor",
+							"background-offset": "0, 0",
+							"class": "CSearchTextEdit",
+							"clearmark-inset": "5, 5",
+							"default-value": "0.5",
+							"font": "~ NormalFont",
+							"font-antialias": "true",
+							"font-color": "~ WhiteCColor",
+							"frame-color": "~ GreyCColor",
+							"frame-width": "-1",
+							"immediate-text-change": "false",
+							"max-value": "1",
+							"min-value": "0",
+							"mouse-enabled": "true",
+							"opacity": "1",
+							"origin": "420, 10",
+							"placeholder-title": "Search",
+							"round-rect-radius": "3",
+							"secure-style": "false",
+							"shadow-color": "~ RedCColor",
+							"size": "210, 20",
+							"style-3D-in": "false",
+							"style-3D-out": "false",
+							"style-doubleclick": "false",
+							"style-no-draw": "false",
+							"style-no-frame": "false",
+							"style-no-text": "false",
+							"style-round-rect": "true",
+							"style-shadow-text": "false",
+							"text-alignment": "left",
+							"text-inset": "5, 0",
+							"text-rotation": "0",
+							"text-shadow-offset": "1, 1",
+							"transparent": "false",
+							"value-precision": "2",
+							"wants-focus": "true",
+							"wheel-inc-value": "0.1"
+						}
+					},
+					"CCheckBox": {
+						"attributes": {
+							"autosize": "right top ",
+							"autosize-to-fit": "false",
+							"boxfill-color": "~ WhiteCColor",
+							"boxframe-color": "~ BlackCColor",
+							"checkmark-color": "~ BlackCColor",
+							"class": "CCheckBox",
+							"default-value": "0.5",
+							"draw-crossbox": "true",
+							"font": "~ NormalFontVerySmall",
+							"font-color": "~ BlackCColor",
+							"frame-width": "1",
+							"max-value": "1",
+							"min-value": "0",
+							"mouse-enabled": "true",
+							"opacity": "1",
+							"origin": "420, 30",
+							"round-rect-radius": "2",
+							"size": "68.019, 15",
+							"title": "Match Case",
+							"transparent": "false",
+							"wants-focus": "true",
+							"wheel-inc-value": "0.1"
+						}
+					},
+					"CCheckBox": {
+						"attributes": {
+							"autosize": "right top ",
+							"autosize-to-fit": "false",
+							"boxfill-color": "~ WhiteCColor",
+							"boxframe-color": "~ BlackCColor",
+							"checkmark-color": "~ BlackCColor",
+							"class": "CCheckBox",
+							"default-value": "0.5",
+							"draw-crossbox": "true",
+							"font": "~ NormalFontVerySmall",
+							"font-color": "~ BlackCColor",
+							"frame-width": "1",
+							"max-value": "1",
+							"min-value": "0",
+							"mouse-enabled": "true",
+							"opacity": "1",
+							"origin": "495, 30",
+							"round-rect-radius": "2",
+							"size": "68.019, 15",
+							"title": "Whole Word",
+							"transparent": "false",
+							"wants-focus": "true",
+							"wheel-inc-value": "0.1"
+						}
+					},
+					"CCheckBox": {
+						"attributes": {
+							"autosize": "right top ",
+							"autosize-to-fit": "false",
+							"boxfill-color": "~ WhiteCColor",
+							"boxframe-color": "~ BlackCColor",
+							"checkmark-color": "~ BlackCColor",
+							"class": "CCheckBox",
+							"default-value": "0.5",
+							"draw-crossbox": "true",
+							"font": "~ NormalFontVerySmall",
+							"font-color": "~ BlackCColor",
+							"frame-width": "1",
+							"max-value": "1",
+							"min-value": "0",
+							"mouse-enabled": "true",
+							"opacity": "1",
+							"origin": "565, 30",
+							"round-rect-radius": "2",
+							"size": "68.019, 15",
+							"title": "Word Start",
+							"transparent": "false",
+							"wants-focus": "true",
+							"wheel-inc-value": "0.1"
+						}
+					}
+				}
+			}
+		}
+	}
+}

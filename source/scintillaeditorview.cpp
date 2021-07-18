@@ -14,6 +14,9 @@
 #include "vstgui/uidescription/uiviewfactory.h"
 
 #include "Scintilla.h"
+#include "ILexer.h"
+#include "Lexilla.h"
+#include "LexillaAccess.h"
 
 //------------------------------------------------------------------------
 namespace VSTGUI {
@@ -238,7 +241,8 @@ uint32_t ScintillaEditorView::getTabWidth () const
 //------------------------------------------------------------------------
 void ScintillaEditorView::setLexerLanguage (IdStringPtr lang)
 {
-	sendMessageT (SCI_SETLEXERLANGUAGE, 0, lang);
+	auto lexer = CreateLexer (lang);
+	sendMessageT (SCI_SETILEXER, 0, lexer);
 }
 
 //------------------------------------------------------------------------
@@ -406,7 +410,8 @@ public:
 			CPoint p;
 			p.x = sev->sendMessage (SCI_GETMARGINLEFT, 0, 0);
 			p.y = sev->sendMessage (SCI_GETMARGINRIGHT, 0, 0);
-			return pointToString (p, stringValue);
+			stringValue = UIAttributes::pointToString (p);
+			return true;
 		}
 		if (attName == kAttrEditorFont)
 		{
