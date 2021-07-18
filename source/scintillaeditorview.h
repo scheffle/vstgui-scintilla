@@ -12,6 +12,10 @@
 
 struct SCNotification; // forward
 
+namespace Scintilla {
+class ILexer5;
+};
+
 //------------------------------------------------------------------------
 namespace VSTGUI {
 
@@ -99,17 +103,27 @@ public:
 	uint32_t getTabWidth () const;
 
 	// ------------------------------------
-	// Tabs/Indentation
+	// Lexer
 	void setLexerLanguage (IdStringPtr lang);
 	std::string getLexerLanguage () const;
-	
+	Scintilla::ILexer5* getLexer () const { return lexer; }
+
 	/** send a message to the scintilla backend */
 	intptr_t sendMessage (uint32_t message, uintptr_t wParam, intptr_t lParam) const;
 
-	template <typename T>
-	intptr_t sendMessageT (uint32_t message, uintptr_t wParam, T lParam) const
+	template <typename MT, typename T>
+	intptr_t sendMessageT (MT message, uintptr_t wParam, T lParam) const
 	{
-		return sendMessage (message, wParam, reinterpret_cast<intptr_t> (lParam));
+		if constexpr (std::is_floating_point_v<T> || std::is_integral_v<T>)
+			return sendMessage (static_cast<uint32_t> (message), wParam, static_cast<intptr_t> (lParam));
+		else
+		return sendMessage (static_cast<uint32_t> (message), wParam, reinterpret_cast<intptr_t> (lParam));
+	}
+
+	template <typename MT>
+	intptr_t sendMessageT (MT message, uintptr_t wParam = 0) const
+	{
+		return sendMessage (static_cast<uint32_t> (message), wParam, 0);
 	}
 
 	void registerListener (IScintillaListener* listener);
@@ -128,6 +142,7 @@ private:
 	void platformSetBackgroundColor (const CColor& color);
 
 	SharedPointer<CFontDesc> font;
+	Scintilla::ILexer5* lexer {nullptr};
 	CColor selectionBackgroundColor {kTransparentCColor};
 	CColor selectionForegroundColor {kTransparentCColor};
 	CColor staticFontColor {kTransparentCColor};

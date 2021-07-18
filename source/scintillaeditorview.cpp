@@ -13,6 +13,7 @@
 #include "vstgui/uidescription/uiviewcreator.h"
 #include "vstgui/uidescription/uiviewfactory.h"
 
+#include "ScintillaMessages.h"
 #include "Scintilla.h"
 #include "ILexer.h"
 #include "Lexilla.h"
@@ -20,6 +21,7 @@
 
 //------------------------------------------------------------------------
 namespace VSTGUI {
+using Message = Scintilla::Message;
 
 //------------------------------------------------------------------------
 void ScintillaEditorView::setFont (const SharedPointer<CFontDesc>& _font)
@@ -33,10 +35,10 @@ void ScintillaEditorView::setFont (const SharedPointer<CFontDesc>& _font)
 	auto fontSize = font->getSize () * static_cast<CCoord> (SC_FONT_SIZE_MULTIPLIER);
 	for (int i = 0; i < 128; i++)
 	{
-		sendMessageT (SCI_STYLESETFONT, i, fontName.data ());
-		sendMessage (SCI_STYLESETSIZEFRACTIONAL, i, fontSize);
-		sendMessage (SCI_STYLESETBOLD, i, isBold);
-		sendMessage (SCI_STYLESETITALIC, i, isItalic);
+		sendMessageT (Message::StyleSetFont, i, fontName.data ());
+		sendMessageT (Message::StyleSetSizeFractional, i, static_cast<intptr_t> (fontSize));
+		sendMessageT (Message::StyleSetBold, i, isBold);
+		sendMessageT (Message::StyleSetItalic, i, isItalic);
 	}
 }
 
@@ -56,14 +58,14 @@ void ScintillaEditorView::setStaticFontColor (const CColor& color)
 	{
 		auto sc = toScintillaColor (color);
 		for (auto index = 0; index <= STYLE_DEFAULT; ++index)
-			sendMessage (SCI_STYLESETFORE, index, sc);
+			sendMessageT (Message::StyleSetFore, index, sc);
 	}
 }
 
 //------------------------------------------------------------------------
 CColor ScintillaEditorView::getStaticFontColor () const
 {
-	return fromScintillaColor (sendMessage (SCI_STYLEGETFORE, STYLE_DEFAULT, 0));
+	return fromScintillaColor (sendMessageT (Message::StyleGetFore, STYLE_DEFAULT));
 }
 
 //------------------------------------------------------------------------
@@ -71,28 +73,28 @@ void ScintillaEditorView::setBackgroundColor (const CColor& color)
 {
 	auto sc = toScintillaColor (color);
 	for (auto index = 0; index <= STYLE_DEFAULT; ++index)
-		sendMessage (SCI_STYLESETBACK, index, sc);
+		sendMessageT (Message::StyleSetBack, index, sc);
 	platformSetBackgroundColor (color);
 }
 
 //------------------------------------------------------------------------
 CColor ScintillaEditorView::getBackgroundColor () const
 {
-	return fromScintillaColor (sendMessage (SCI_STYLEGETBACK, STYLE_DEFAULT, 0));
+	return fromScintillaColor (sendMessageT (Message::StyleGetBack, STYLE_DEFAULT));
 }
 
 //------------------------------------------------------------------------
 void ScintillaEditorView::setSelectionBackgroundColor (const CColor& color)
 {
 	bool enable = color != kTransparentCColor;
-	sendMessage (SCI_SETSELBACK, enable, toScintillaColor (color));
+	sendMessageT (Message::SetSelBack, enable, toScintillaColor (color));
 }
 
 //------------------------------------------------------------------------
 void ScintillaEditorView::setSelectionForegroundColor (const CColor& color)
 {
 	bool enable = color != kTransparentCColor;
-	sendMessage (SCI_SETSELFORE, enable, toScintillaColor (color));
+	sendMessageT (Message::SetSelFore, enable, toScintillaColor (color));
 }
 
 //------------------------------------------------------------------------
@@ -110,47 +112,47 @@ CColor ScintillaEditorView::getSelectionForegroundColor () const
 //------------------------------------------------------------------------
 bool ScintillaEditorView::canUndo () const
 {
-	return sendMessage (SCI_CANUNDO, 0, 0) != 0;
+	return sendMessageT (Message::CanUndo, 0, 0) != 0;
 }
 
 //------------------------------------------------------------------------
 bool ScintillaEditorView::canRedo () const
 {
-	return sendMessage (SCI_CANREDO, 0, 0) != 0;
+	return sendMessageT (Message::CanRedo, 0, 0) != 0;
 }
 
 //------------------------------------------------------------------------
 void ScintillaEditorView::undo ()
 {
-	sendMessage (SCI_UNDO, 0, 0);
+	sendMessageT (Message::Undo, 0, 0);
 }
 
 //------------------------------------------------------------------------
 void ScintillaEditorView::redo ()
 {
-	sendMessage (SCI_REDO, 0, 0);
+	sendMessageT (Message::Redo, 0, 0);
 }
 
 //------------------------------------------------------------------------
 void ScintillaEditorView::setText (UTF8StringPtr text)
 {
-	sendMessageT (SCI_SETTEXT, 0, text);
+	sendMessageT (Message::SetText, 0, text);
 }
 
 //------------------------------------------------------------------------
 auto ScintillaEditorView::getSelection () const -> Selection
 {
 	Selection selection {};
-	selection.start = sendMessage (SCI_GETSELECTIONSTART, 0, 0);
-	selection.end = sendMessage (SCI_GETSELECTIONEND, 0, 0);
+	selection.start = sendMessageT (Message::GetSelectionStart, 0, 0);
+	selection.end = sendMessageT (Message::GetSelectionEnd, 0, 0);
 	return selection;
 }
 
 //------------------------------------------------------------------------
 void ScintillaEditorView::setSelection (Selection selection)
 {
-	sendMessage (SCI_SETSELECTIONSTART, selection.start, 0);
-	sendMessage (SCI_SETSELECTIONEND, selection.end, 0);
+	sendMessageT (Message::SetSelectionStart, selection.start, 0);
+	sendMessageT (Message::SetSelectionEnd, selection.end, 0);
 }
 
 //------------------------------------------------------------------------
@@ -167,38 +169,38 @@ int64_t ScintillaEditorView::findAndSelect (UTF8StringPtr searchString, uint32_t
 	auto selection = getSelection ();
 
 	if (!(searchFlags & Backwards))
-		sendMessage (SCI_SETSELECTIONSTART, selection.end, 0);
-	sendMessage (SCI_SEARCHANCHOR, 0, 0);
+		sendMessageT (Message::SetSelectionStart, selection.end);
+	sendMessageT (Message::SearchAnchor);
 
 	intptr_t result;
 	if (searchFlags & Backwards)
 	{
-		result = sendMessageT (SCI_SEARCHPREV, sciSearchFlags, searchString);
+		result = sendMessageT (Message::SearchPrev, sciSearchFlags, searchString);
 		if (result < 0 && searchFlags & Wrap)
 		{
-			auto textLength = sendMessage (SCI_GETTEXTLENGTH, 0, 0);
-			sendMessage (SCI_SETSELECTIONSTART, textLength, 0);
-			sendMessage (SCI_SETSELECTIONEND, textLength, 0);
-			sendMessage (SCI_SEARCHANCHOR, 0, 0);
-			result = sendMessageT (SCI_SEARCHPREV, sciSearchFlags, searchString);
+			auto textLength = sendMessageT (Message::GetTextLength);
+			sendMessageT (Message::SetSelectionStart, textLength);
+			sendMessageT (Message::SetSelectionEnd, textLength);
+			sendMessageT (Message::SearchAnchor);
+			result = sendMessageT (Message::SearchPrev, sciSearchFlags, searchString);
 		}
 	}
 	else
 	{
-		result = sendMessageT (SCI_SEARCHNEXT, sciSearchFlags, searchString);
+		result = sendMessageT (Message::SearchNext, sciSearchFlags, searchString);
 		if (result < 0 && searchFlags & Wrap)
 		{
-			sendMessage (SCI_SETSELECTIONSTART, 0, 0);
-			sendMessage (SCI_SETSELECTIONEND, 0, 0);
-			sendMessage (SCI_SEARCHANCHOR, 0, 0);
-			result = sendMessageT (SCI_SEARCHNEXT, sciSearchFlags, searchString);
+			sendMessageT (Message::SetSelectionStart, 0);
+			sendMessageT (Message::SetSelectionEnd, 0);
+			sendMessageT (Message::SearchAnchor, 0);
+			result = sendMessageT (Message::SearchNext, sciSearchFlags, searchString);
 		}
 	}
 	if (result >= 0)
 	{
 		if (searchFlags & ScrollTo)
 		{
-			sendMessage (SCI_SCROLLCARET, 0, 0);
+			sendMessageT (Message::ScrollCaret, 0, 0);
 		}
 		return result;
 	}
@@ -210,48 +212,56 @@ int64_t ScintillaEditorView::findAndSelect (UTF8StringPtr searchString, uint32_t
 //------------------------------------------------------------------------
 bool ScintillaEditorView::replaceSelection (UTF8StringPtr string)
 {
-	sendMessageT (SCI_REPLACESEL, 0, string);
+	sendMessageT (Message::ReplaceSel, 0, string);
 	return true;
 }
 
 //------------------------------------------------------------------------
 void ScintillaEditorView::setUseTabs (bool state)
 {
-	sendMessage (SCI_SETUSETABS, state, 0);
+	sendMessageT (Message::SetUseTabs, state, 0);
 }
 
 //------------------------------------------------------------------------
 bool ScintillaEditorView::getUseTabs () const
 {
-	return sendMessage (SCI_GETUSETABS, 0, 0) != 0;
+	return sendMessageT (Message::GetUseTabs, 0, 0) != 0;
 }
 
 //------------------------------------------------------------------------
 void ScintillaEditorView::setTabWidth (uint32_t width)
 {
-	sendMessage (SCI_SETTABWIDTH, width, 0);
+	sendMessageT (Message::SetTabWidth, width, 0);
 }
 
 //------------------------------------------------------------------------
 uint32_t ScintillaEditorView::getTabWidth () const
 {
-	return static_cast<uint32_t> (sendMessage (SCI_GETTABWIDTH, 0, 0));
+	return static_cast<uint32_t> (sendMessageT (Message::GetTabWidth, 0, 0));
 }
 
 //------------------------------------------------------------------------
 void ScintillaEditorView::setLexerLanguage (IdStringPtr lang)
 {
-	auto lexer = CreateLexer (lang);
-	sendMessageT (SCI_SETILEXER, 0, lexer);
+	if (lexer)
+	{
+		if (auto lexerName = lexer->GetName ())
+		{
+			if (std::string_view (lang) == lexerName)
+				return;
+		}
+	}
+	lexer = CreateLexer (lang);
+	sendMessageT (Message::SetILexer, 0, lexer);
 }
 
 //------------------------------------------------------------------------
 std::string ScintillaEditorView::getLexerLanguage () const
 {
 	std::string result;
-	auto length = sendMessage (SCI_GETLEXERLANGUAGE, 0, 0);
+	auto length = sendMessageT (Message::GetLexerLanguage, 0, 0);
 	result.resize (length);
-	sendMessageT (SCI_GETLEXERLANGUAGE, 0, result.data ());
+	sendMessageT (Message::GetLexerLanguage, 0, result.data ());
 	return result;
 }
 
@@ -359,11 +369,11 @@ public:
 		}
 		if (stringToColor (attr.getAttributeValue (kAttrLineNumberFontColor), color, desc))
 		{
-			sev->sendMessage (SCI_STYLESETFORE, STYLE_LINENUMBER, toScintillaColor (color));
+			sev->sendMessageT (Message::StyleSetFore, STYLE_LINENUMBER, toScintillaColor (color));
 		}
 		if (stringToColor (attr.getAttributeValue (kAttrLineNumberBackgroundColor), color, desc))
 		{
-			sev->sendMessage (SCI_STYLESETBACK, STYLE_LINENUMBER, toScintillaColor (color));
+			sev->sendMessageT (Message::StyleSetBack, STYLE_LINENUMBER, toScintillaColor (color));
 		}
 		if (auto fontName = attr.getAttributeValue (kAttrEditorFont))
 		{
@@ -389,8 +399,8 @@ public:
 		CPoint p;
 		if (attr.getPointAttribute (kAttrEditorMargin, p))
 		{
-			sev->sendMessage (SCI_SETMARGINLEFT, 0, p.x);
-			sev->sendMessage (SCI_SETMARGINRIGHT, 0, p.y);
+			sev->sendMessageT (Message::SetMarginLeft, 0, p.x);
+			sev->sendMessageT (Message::SetMarginRight, 0, p.y);
 		}
 		return true;
 	}
@@ -408,8 +418,8 @@ public:
 		if (attName == kAttrEditorMargin)
 		{
 			CPoint p;
-			p.x = sev->sendMessage (SCI_GETMARGINLEFT, 0, 0);
-			p.y = sev->sendMessage (SCI_GETMARGINRIGHT, 0, 0);
+			p.x = sev->sendMessageT (Message::GetMarginLeft, 0, 0);
+			p.y = sev->sendMessageT (Message::GetMarginRight, 0, 0);
 			stringValue = UIAttributes::pointToString (p);
 			return true;
 		}
@@ -435,13 +445,13 @@ public:
 		if (attName == kAttrLineNumberFontColor)
 		{
 			auto color =
-			    fromScintillaColor (sev->sendMessage (SCI_STYLEGETFORE, STYLE_LINENUMBER, 0));
+			    fromScintillaColor (sev->sendMessageT (Message::StyleGetFore, STYLE_LINENUMBER, 0));
 			return colorToString (color, stringValue, desc);
 		}
 		if (attName == kAttrLineNumberBackgroundColor)
 		{
 			auto color =
-			    fromScintillaColor (sev->sendMessage (SCI_STYLEGETBACK, STYLE_LINENUMBER, 0));
+			    fromScintillaColor (sev->sendMessageT (Message::StyleGetBack, STYLE_LINENUMBER, 0));
 			return colorToString (color, stringValue, desc);
 		}
 		if (attName == UIViewCreator::kAttrBackgroundColor)
