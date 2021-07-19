@@ -14,6 +14,8 @@
 #include "vstgui/uidescription/delegationcontroller.h"
 
 #include "Scintilla.h"
+#include "SciLexer.h"
+#include "ILexer.h"
 
 using namespace VSTGUI;
 using namespace VSTGUI::Standalone;
@@ -37,12 +39,35 @@ public:
 		{
 			editor = ed;
 			editor->registerViewListener (this);
+
+			if (auto lexer = editor->getLexer())
+			{
+				auto keywords =
+				    R"(alignas alignof and and_eq asm auto bitand bitor bool break case catch char char16_t char32_t class compl const constexpr const_cast continue decltype default delete do double dynamic_cast else enum explicit export extern false float for friend goto if inline int long mutable namespace new noexcept not not_eq nullptr operator or or_eq private protected public register reinterpret_cast return short signed sizeof static static_assert static_cast struct switch template this thread_local throw true try typedef typeid typename union unsigned using virtual void volatile wchar_t while xor xor_eq)";
+				lexer->WordListSet (0, keywords);
+			}
+
+			CColor commentColor;
+			auto backgroundColor = editor->getBackgroundColor ();
+			auto fontColor = editor->getStaticFontColor ();
+			if (backgroundColor.getLightness () > fontColor.getLightness ())
+				commentColor = backgroundColor;
+			else
+				commentColor = fontColor;
+			double h, s, l;
+			commentColor.toHSL (h, s, l);
+			l *= 0.5;
+			commentColor.fromHSL (h, s, l);
+			editor->setStyleColor (SCE_C_COMMENT, commentColor);
+			editor->setStyleColor (SCE_C_COMMENTLINE, commentColor);
+			editor->setStyleColor (SCE_C_COMMENTDOC, commentColor);
+			editor->setStyleFontWeight (SCE_C_WORD, 900);
+
 			Preferences prefs;
 			if (auto value = prefs.get ("EditorText"))
 			{
 				editor->setText (*value);
 			}
-
 		}
 		else if (auto sf = dynamic_cast<CSearchTextEdit*> (view))
 		{

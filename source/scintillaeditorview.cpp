@@ -13,19 +13,35 @@
 #include "vstgui/uidescription/uiviewcreator.h"
 #include "vstgui/uidescription/uiviewfactory.h"
 
-#include "ScintillaMessages.h"
-#include "ScintillaTypes.h"
-#include "ScintillaCall.h"
-#include "Scintilla.h"
 #include "ILexer.h"
 #include "Lexilla.h"
 #include "LexillaAccess.h"
+#include "Scintilla.h"
+#include "ScintillaMessages.h"
+#include "ScintillaTypes.h"
 
 //------------------------------------------------------------------------
 namespace VSTGUI {
 using Message = Scintilla::Message;
 using StylesCommon = Scintilla::StylesCommon;
 using Element = Scintilla::Element;
+using MarkerSymbol = Scintilla::MarkerSymbol;
+using MarkerOutline = Scintilla::MarkerOutline;
+
+//------------------------------------------------------------------------
+void ScintillaEditorView::setStyleColor (uint32_t index, const CColor& textColor,
+                                         const CColor& backColor)
+{
+	sendMessage (Message::StyleSetFore, index, toScintillaColor (textColor));
+	if (backColor != kTransparentCColor)
+		sendMessage (Message::StyleSetBack, index, toScintillaColor (backColor));
+}
+
+//------------------------------------------------------------------------
+void ScintillaEditorView::setStyleFontWeight (uint32_t index, uint32_t weight)
+{
+	sendMessage (Message::StyleSetWeight, index, weight);
+}
 
 //------------------------------------------------------------------------
 void ScintillaEditorView::setFont (const SharedPointer<CFontDesc>& _font)
@@ -163,7 +179,7 @@ UTF8String ScintillaEditorView::getText () const
 	if (length > 0)
 	{
 		str.resize (length);
-		sendMessage (Message::GetText, length+1, str.data ());
+		sendMessage (Message::GetText, length + 1, str.data ());
 	}
 	return UTF8String (std::move (str));
 }
@@ -297,14 +313,116 @@ std::string ScintillaEditorView::getLexerLanguage () const
 //------------------------------------------------------------------------
 void ScintillaEditorView::setLineNumbersVisible (bool state)
 {
-	sendMessage (Message::SetMargins, state ? 1 : 0);
+	auto currentState = (marginsCol & (1 << MarginsCol::LineNumber));
+	if (currentState == state)
+		return;
+	if (state)
+		marginsCol |= (1 << MarginsCol::LineNumber);
+	else
+		marginsCol &= ~(1 << MarginsCol::LineNumber);
+
+	updateMarginsColumns ();
+}
+
+//------------------------------------------------------------------------
+bool ScintillaEditorView::getLineNumbersVisible () const
+{
+	return (marginsCol & (1 << MarginsCol::LineNumber));
+}
+
+//------------------------------------------------------------------------
+void ScintillaEditorView::setLineNumberForegroundColor (const CColor& color)
+{
+	sendMessage (Message::StyleSetFore, StylesCommon::LineNumber, toScintillaColor (color));
+}
+
+//------------------------------------------------------------------------
+CColor ScintillaEditorView::getLineNumberForegroundColor () const
+{
+	return fromScintillaColor (sendMessage (Message::StyleGetFore, StylesCommon::LineNumber));
+}
+
+//------------------------------------------------------------------------
+void ScintillaEditorView::setLineNumberBackgroundColor (const CColor& color)
+{
+	sendMessage (Message::StyleSetBack, StylesCommon::LineNumber, toScintillaColor (color));
+}
+
+//------------------------------------------------------------------------
+CColor ScintillaEditorView::getLineNumberBackgroundColor () const
+{
+	return fromScintillaColor (sendMessage (Message::StyleGetBack, StylesCommon::LineNumber));
+}
+
+//------------------------------------------------------------------------
+void ScintillaEditorView::setFoldingVisible (bool state)
+{
+	auto currentState = (marginsCol & (1 << MarginsCol::Folding));
+	if (currentState == state)
+		return;
 	if (state)
 	{
-		sendMessage (Message::SetMarginTypeN, 0, SC_MARGIN_NUMBER);
-		auto width = sendMessage (Message::TextWidth, StylesCommon::LineNumber, "_99999");
-		sendMessage (Message::SetMarginWidthN, 0, width);
+		marginsCol |= (1 << MarginsCol::Folding);
+		registerListener (this);
 	}
 	else
+	{
+		marginsCol &= ~(1 << MarginsCol::Folding);
+		unregisterListener (this);
+	}
+
+	updateMarginsColumns ();
+}
+
+//------------------------------------------------------------------------
+bool ScintillaEditorView::getFoldingVisible () const
+{
+	return (marginsCol & (1 << MarginsCol::Folding));
+}
+
+//------------------------------------------------------------------------
+void ScintillaEditorView::updateMarginsColumns ()
+{
+	auto lineNumbers = (marginsCol & (1 << MarginsCol::LineNumber));
+	auto folding = (marginsCol & (1 << MarginsCol::Folding));
+
+	auto count = 0;
+	if (lineNumbers)
+		++count;
+	if (folding)
+		++count;
+
+	sendMessage (Message::SetMargins, count);
+	uint32_t column = 0;
+	if (lineNumbers)
+	{
+		sendMessage (Message::SetMarginTypeN, column, SC_MARGIN_NUMBER);
+		auto width = sendMessage (Message::TextWidth, StylesCommon::LineNumber, "_99999");
+		sendMessage (Message::SetMarginWidthN, column, width);
+		++column;
+	}
+	if (folding)
+	{
+		sendMessage (Message::SetMarginTypeN, column, SC_MARGIN_SYMBOL);
+		sendMessage (Message::SetMarginMaskN, column, SC_MASK_FOLDERS);
+		sendMessage (Message::SetMarginWidthN, column, 20);
+		sendMessage (Message::SetMarginSensitiveN, column, 1);
+
+		sendMessage (Message::MarkerDefine, MarkerOutline::Folder, MarkerSymbol::Arrow);
+		sendMessage (Message::MarkerDefine, MarkerOutline::FolderOpen, MarkerSymbol::ArrowDown);
+		sendMessage (Message::MarkerDefine, MarkerOutline::FolderEnd, MarkerSymbol::Empty);
+		sendMessage (Message::MarkerDefine, MarkerOutline::FolderMidTail, MarkerSymbol::Empty);
+		sendMessage (Message::MarkerDefine, MarkerOutline::FolderOpenMid, MarkerSymbol::Empty);
+		sendMessage (Message::MarkerDefine, MarkerOutline::FolderSub, MarkerSymbol::Empty);
+		sendMessage (Message::MarkerDefine, MarkerOutline::FolderTail, MarkerSymbol::Empty);
+
+		if (lexer)
+		{
+			lexer->PropertySet ("fold", "1");
+			lexer->PropertySet ("fold.comment", "1");
+		}
+	}
+	if (count == 0)
 	{
 		sendMessage (Message::SetMarginWidthN, 0, 0);
 		// the following is a workaround so that the margins are removed immediately on macOS
@@ -317,9 +435,28 @@ void ScintillaEditorView::setLineNumbersVisible (bool state)
 }
 
 //------------------------------------------------------------------------
-bool ScintillaEditorView::getLineNumbersVisible () const
+int32_t ScintillaEditorView::getFoldingIndex () const
 {
-	return sendMessage (Message::GetMargins) != 0;
+	int32_t index = -1;
+	if (getFoldingVisible ())
+		index = 0;
+	if (getLineNumbersVisible ())
+		++index;
+	return index;
+}
+
+//------------------------------------------------------------------------
+void ScintillaEditorView::onScintillaNotification (SCNotification* notification)
+{
+	assert (notification);
+	if (notification->nmhdr.code == SCN_MARGINCLICK)
+	{
+		if (notification->margin == getFoldingIndex ())
+		{
+			auto line = sendMessage (Message::LineFromPosition, notification->position);
+			sendMessage (Message::ToggleFold, line);
+		}
+	}
 }
 
 //------------------------------------------------------------------------
@@ -338,6 +475,7 @@ static std::string kAttrLineNumberBackgroundColor = "line-number-background-colo
 static std::string kAttrSelectionBackgroundColor = "selection-background-color";
 static std::string kAttrSelectionForegroundColor = "selection-foreground-color";
 static std::string kAttrShowLineNumbers = "show-line-numbers";
+static std::string kAttrShowFolding = "show-folding";
 static std::string kAttrUseTabs = "use-tabs";
 static std::string kAttrTabWidth = "tab-width";
 static std::string kAttrLexer = "lexer";
@@ -366,6 +504,8 @@ public:
 		// selection
 		attributeNames.push_back (kAttrSelectionBackgroundColor);
 		attributeNames.push_back (kAttrSelectionForegroundColor);
+		// folding
+		attributeNames.push_back (kAttrShowFolding);
 		// line-number
 		attributeNames.push_back (kAttrShowLineNumbers);
 		attributeNames.push_back (kAttrLineNumberFontColor);
@@ -391,6 +531,8 @@ public:
 			return kColorType;
 		if (attributeName == kAttrSelectionForegroundColor)
 			return kColorType;
+		if (attributeName == kAttrShowFolding)
+			return kBooleanType;
 		if (attributeName == kAttrShowLineNumbers)
 			return kBooleanType;
 		if (attributeName == kAttrLineNumberFontColor)
@@ -430,11 +572,11 @@ public:
 		}
 		if (stringToColor (attr.getAttributeValue (kAttrLineNumberFontColor), color, desc))
 		{
-			sev->sendMessage (Message::StyleSetFore, StylesCommon::LineNumber, toScintillaColor (color));
+			sev->setLineNumberForegroundColor (color);
 		}
 		if (stringToColor (attr.getAttributeValue (kAttrLineNumberBackgroundColor), color, desc))
 		{
-			sev->sendMessage (Message::StyleSetBack, StylesCommon::LineNumber, toScintillaColor (color));
+			sev->setLineNumberBackgroundColor (color);
 		}
 		if (auto fontName = attr.getAttributeValue (kAttrEditorFont))
 		{
@@ -453,9 +595,13 @@ public:
 		{
 			sev->setUseTabs (b);
 		}
-		if (attr.getBooleanAttribute(kAttrShowLineNumbers, b))
+		if (attr.getBooleanAttribute (kAttrShowLineNumbers, b))
 		{
 			sev->setLineNumbersVisible (b);
+		}
+		if (attr.getBooleanAttribute (kAttrShowFolding, b))
+		{
+			sev->setFoldingVisible (b);
 		}
 		int32_t i;
 		if (attr.getIntegerAttribute (kAttrTabWidth, i))
@@ -510,14 +656,12 @@ public:
 		}
 		if (attName == kAttrLineNumberFontColor)
 		{
-			auto color =
-			    fromScintillaColor (sev->sendMessage (Message::StyleGetFore, StylesCommon::LineNumber));
+			auto color = sev->getLineNumberForegroundColor ();
 			return colorToString (color, stringValue, desc);
 		}
 		if (attName == kAttrLineNumberBackgroundColor)
 		{
-			auto color =
-			    fromScintillaColor (sev->sendMessage (Message::StyleGetBack, StylesCommon::LineNumber));
+			auto color = sev->getLineNumberBackgroundColor ();
 			return colorToString (color, stringValue, desc);
 		}
 		if (attName == UIViewCreator::kAttrBackgroundColor)
@@ -529,6 +673,11 @@ public:
 		{
 			auto color = sev->getStaticFontColor ();
 			return colorToString (color, stringValue, desc);
+		}
+		if (attName == kAttrShowFolding)
+		{
+			stringValue = sev->getFoldingVisible () ? "true" : "false";
+			return true;
 		}
 		if (attName == kAttrShowLineNumbers)
 		{

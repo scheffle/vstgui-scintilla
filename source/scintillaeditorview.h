@@ -29,11 +29,16 @@ public:
 };
 
 //------------------------------------------------------------------------
-class ScintillaEditorView : public CView
+class ScintillaEditorView : public CView, public IScintillaListener
 {
 public:
 	ScintillaEditorView ();
 	~ScintillaEditorView () noexcept;
+
+	/** set current text */
+	void setText (UTF8StringPtr text);
+	/** get current text */
+	UTF8String getText () const;
 
 	/** set font for all styles.
 	 *	@param font font
@@ -54,11 +59,6 @@ public:
 	void setSelectionForegroundColor (const CColor& color);
 	CColor getSelectionBackgroundColor () const;
 	CColor getSelectionForegroundColor () const;
-
-	/** set current text. (the same as sendMessage (SCI_SETTEXT, 0, text) */
-	void setText (UTF8StringPtr text);
-	/** get current text */
-	UTF8String getText () const;
 
 	void setCaretColor (const CColor& color);
 	CColor getCaretColor () const;
@@ -111,6 +111,22 @@ public:
 	// Line Numbers
 	void setLineNumbersVisible (bool state);
 	bool getLineNumbersVisible () const;
+	void setLineNumberForegroundColor (const CColor& color);
+	CColor getLineNumberForegroundColor () const;
+	void setLineNumberBackgroundColor (const CColor& color);
+	CColor getLineNumberBackgroundColor () const;
+
+	// ------------------------------------
+	// Folding
+	void setFoldingVisible (bool state);
+	bool getFoldingVisible () const;
+
+#if 0 // not possible with scintilla 5.1
+	void setFoldingForegroundColor (const CColor& color);
+	CColor getFoldingForegroundColor () const;
+	void setFoldingBackgroundColor (const CColor& color);
+	CColor getFoldingBackgroundColor () const;
+#endif
 
 	// ------------------------------------
 	// Lexer
@@ -118,13 +134,19 @@ public:
 	std::string getLexerLanguage () const;
 	Scintilla::ILexer5* getLexer () const { return lexer; }
 
+	/** set style color */
+	void setStyleColor (uint32_t index, const CColor& textColor,
+	                    const CColor& backColor = kTransparentCColor);
+	/** set style font weight [1..999] where normal=400, semibold=600, bold=700 */
+	void setStyleFontWeight (uint32_t index, uint32_t weight);
+
 	/** send a message to the scintilla backend */
 	intptr_t sendMessage (uint32_t message, uintptr_t wParam, intptr_t lParam) const;
 
 	template <typename MT, typename WPARAMT = uintptr_t, typename LPARAMT = intptr_t>
 	intptr_t sendMessage (MT message, WPARAMT wParam = 0, LPARAMT lParam = 0) const
 	{
-		if constexpr (std::is_arithmetic_v<LPARAMT>)
+		if constexpr (std::is_arithmetic_v<LPARAMT> || std::is_enum_v<LPARAMT>)
 			return sendMessage (static_cast<uint32_t> (message), static_cast<uintptr_t> (wParam), static_cast<intptr_t> (lParam));
 		else
 		return sendMessage (static_cast<uint32_t> (message), static_cast<uintptr_t> (wParam), reinterpret_cast<intptr_t> (lParam));
@@ -142,14 +164,25 @@ public:
 	struct Impl;
 
 private:
+	void onScintillaNotification (SCNotification* notification) override;
 	void draw (CDrawContext* pContext) override;
 	void platformSetBackgroundColor (const CColor& color);
+	void updateMarginsColumns ();
+	int32_t getFoldingIndex () const;
 
 	SharedPointer<CFontDesc> font;
 	Scintilla::ILexer5* lexer {nullptr};
 	CColor selectionBackgroundColor {kTransparentCColor};
 	CColor selectionForegroundColor {kTransparentCColor};
 	CColor staticFontColor {kTransparentCColor};
+
+	enum MarginsCol
+	{
+		LineNumber = 0,
+		Folding
+	};
+
+	uint32_t marginsCol {0};
 	std::unique_ptr<Impl> impl;
 };
 
