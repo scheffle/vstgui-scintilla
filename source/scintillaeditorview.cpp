@@ -156,6 +156,19 @@ void ScintillaEditorView::setText (UTF8StringPtr text)
 }
 
 //------------------------------------------------------------------------
+UTF8String ScintillaEditorView::getText () const
+{
+	std::string str;
+	auto length = sendMessage (Message::GetTextLength);
+	if (length > 0)
+	{
+		str.resize (length);
+		sendMessage (Message::GetText, length+1, str.data ());
+	}
+	return UTF8String (std::move (str));
+}
+
+//------------------------------------------------------------------------
 auto ScintillaEditorView::getSelection () const -> Selection
 {
 	Selection selection {};

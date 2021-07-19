@@ -4,8 +4,10 @@
 
 #include "scintillaeditorview.h"
 #include "vstgui/lib/controls/csearchtextedit.h"
+#include "vstgui/lib/iviewlistener.h"
 #include "vstgui/standalone/include/helpers/appdelegate.h"
 #include "vstgui/standalone/include/helpers/uidesc/customization.h"
+#include "vstgui/standalone/include/helpers/preferences.h"
 #include "vstgui/standalone/include/helpers/windowlistener.h"
 #include "vstgui/standalone/include/iapplication.h"
 #include "vstgui/standalone/include/iuidescwindow.h"
@@ -21,7 +23,9 @@ static Command FindNextCommand = {CommandGroup::Edit, "Find Next"};
 static Command FindPreviousCommand = {CommandGroup::Edit, "Find Previous"};
 
 //------------------------------------------------------------------------
-class EditorController : public DelegationController, public ICommandHandler
+class EditorController : public DelegationController,
+                         public ICommandHandler,
+                         public ViewListenerAdapter
 {
 public:
 	EditorController (IController* parent) : DelegationController (parent) {}
@@ -32,15 +36,13 @@ public:
 		if (auto ed = dynamic_cast<ScintillaEditorView*> (view))
 		{
 			editor = ed;
-#if 0
-			editor->sendMessage (SCI_STYLESETFORE, SCE_C_COMMENT, toScintillaColor (kGreyCColor));
-			editor->sendMessage (SCI_STYLESETFORE, SCE_C_COMMENTLINE,
-			                     toScintillaColor (kGreyCColor));
-			editor->sendMessage (SCI_STYLESETFORE, SCE_C_COMMENTDOC,
-			                     toScintillaColor (kGreyCColor));
-			editor->sendMessage (SCI_STYLESETFORE, SCE_C_STRING, toScintillaColor (kBlueCColor));
-			editor->sendMessage (SCI_STYLESETFORE, SCE_C_WORD2, toScintillaColor (kBlueCColor));
-#endif
+			editor->registerViewListener (this);
+			Preferences prefs;
+			if (auto value = prefs.get ("EditorText"))
+			{
+				editor->setText (*value);
+			}
+
 		}
 		else if (auto sf = dynamic_cast<CSearchTextEdit*> (view))
 		{
@@ -56,6 +58,18 @@ public:
 		{
 			doFind ();
 		}
+	}
+
+	void viewWillDelete (CView* view) override
+	{
+		if (view == editor)
+		{
+			auto text = editor->getText ();
+			Preferences prefs;
+			prefs.set ("EditorText", text);
+			editor = nullptr;
+		}
+		view->unregisterViewListener (this);
 	}
 
 	bool canHandleCommand (const Command& command) override
@@ -101,6 +115,7 @@ public:
 		const auto& text = searchField->getText ();
 		editor->findAndSelect (text.data (), flags);
 	}
+	
 private:
 	ScintillaEditorView* editor {nullptr};
 	CSearchTextEdit* searchField {nullptr};

@@ -57,6 +57,8 @@ public:
 
 	/** set current text. (the same as sendMessage (SCI_SETTEXT, 0, text) */
 	void setText (UTF8StringPtr text);
+	/** get current text */
+	UTF8String getText () const;
 
 	void setCaretColor (const CColor& color);
 	CColor getCaretColor () const;
