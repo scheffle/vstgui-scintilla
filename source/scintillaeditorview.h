@@ -12,9 +12,7 @@
 
 struct SCNotification; // forward
 
-namespace Scintilla {
-class ILexer5;
-};
+namespace Scintilla { class ILexer5; };
 
 //------------------------------------------------------------------------
 namespace VSTGUI {
@@ -146,16 +144,22 @@ public:
 	template <typename MT, typename WPARAMT = uintptr_t, typename LPARAMT = intptr_t>
 	intptr_t sendMessage (MT message, WPARAMT wParam = 0, LPARAMT lParam = 0) const
 	{
-		if constexpr (std::is_arithmetic_v<LPARAMT> || std::is_enum_v<LPARAMT>)
-			return sendMessage (static_cast<uint32_t> (message), static_cast<uintptr_t> (wParam), static_cast<intptr_t> (lParam));
+		if
+			constexpr (std::is_arithmetic_v<LPARAMT> || std::is_enum_v<LPARAMT>)
+			{
+				return sendMessage (static_cast<uint32_t> (message),
+				                    static_cast<uintptr_t> (wParam),
+				                    static_cast<intptr_t> (lParam));
+			}
 		else
-		return sendMessage (static_cast<uint32_t> (message), static_cast<uintptr_t> (wParam), reinterpret_cast<intptr_t> (lParam));
+			return sendMessage (static_cast<uint32_t> (message), static_cast<uintptr_t> (wParam),
+			                    reinterpret_cast<intptr_t> (lParam));
 	}
 
 	void registerListener (IScintillaListener* listener);
 	void unregisterListener (IScintillaListener* listener);
 
-	// overwrites
+	// ------------------------------------
 	bool attached (CView* parent) override;
 	bool removed (CView* parent) override;
 	void setViewSize (const CRect& rect, bool invalid) override;
