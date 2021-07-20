@@ -36,27 +36,8 @@ set(${target}_resources
   "resource/Editor.uidesc"
 )
 
+##########################################################################################
 if(CMAKE_HOST_APPLE)
-  # get_filename_component(InfoPlistFile "resource/Info.plist" ABSOLUTE)
-  # set(APP_PROPERTIES
-  #   MACOSX_BUNDLE TRUE
-  #   MACOSX_BUNDLE_INFO_PLIST ${InfoPlistFile}
-  #   OUTPUT_NAME "scintilla-example"
-  # )
-  # set_source_files_properties("resource/Editor.uidesc" PROPERTIES
-  #     MACOSX_PACKAGE_LOCATION "Resources"
-  #   )
-  # set(BUNDLE_PKG_INFO
-  #   "resource/PkgInfo"
-  # )
-  # set_source_files_properties(${BUNDLE_PKG_INFO} PROPERTIES
-  #   MACOSX_PACKAGE_LOCATION "."
-  # )
-  #   set(${target}_resources
-  #   ${${target}_resources}
-  #   ${BUNDLE_PKG_INFO}
-  # )
-
   set(${target}_sources
     ${${target}_sources}
     "source/scintillaeditorview_mac.mm"
@@ -74,6 +55,7 @@ if(CMAKE_HOST_APPLE)
   )
   set(LexillaDyLib
 	"${LEXILLA_PATH}/src/Lexilla/build/Debug/liblexilla.dylib"
+#	"${LEXILLA_PATH}/src/Lexilla/build/Release/liblexilla.dylib"
   )
   set(${target}_resources
     ${${target}_resources}
@@ -89,20 +71,6 @@ if(MSVC)
     ${${target}_sources}
     "source/scintillaeditorview_win32.cpp"
   )
-#   set(${target}_resources
-#     ${${target}_resources}
-#     "resource/windows.rc"
-#   )
-#   set(APP_PROPERTIES
-#     LINK_FLAGS "/SUBSYSTEM:windows /INCLUDE:wWinMain"
-#   )
-#     set(${target}_resources
-#     ${${target}_resources}
-# #    "scintilla/bin/Scintilla.dll"
-#   )
-#   set(${target}_PLATFORM_LIBS
-# #    "scintilla/bin/Scintilla"
-#   )
 endif()
 
 vstgui_add_executable(${target}
