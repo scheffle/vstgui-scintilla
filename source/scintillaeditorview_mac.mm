@@ -49,6 +49,7 @@ ScintillaEditorView::ScintillaEditorView () : CView (CRect (0, 0, 0, 0))
 	impl->delegate.impl = impl.get ();
 	impl->view = [[ScintillaView alloc] initWithFrame:NSMakeRect (0, 0, 10, 10)];
 	impl->view.delegate = impl->delegate;
+	init ();
 }
 
 //------------------------------------------------------------------------

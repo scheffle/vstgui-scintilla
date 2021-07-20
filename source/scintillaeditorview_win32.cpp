@@ -109,6 +109,8 @@ ScintillaEditorView::ScintillaEditorView () : CView (CRect (0, 0, 0, 0))
 	impl->scaleFactorChangeListener.func = [this] (auto, auto) {
 		setViewSize (getViewSize (), false);
 	};
+	
+	init ();
 }
 
 //------------------------------------------------------------------------

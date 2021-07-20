@@ -29,6 +29,26 @@ using MarkerSymbol = Scintilla::MarkerSymbol;
 using MarkerOutline = Scintilla::MarkerOutline;
 
 //------------------------------------------------------------------------
+void ScintillaEditorView::init ()
+{
+	setWantsFocus (true);
+	updateMarginsColumns ();
+}
+
+//------------------------------------------------------------------------
+void ScintillaEditorView::looseFocus ()
+{
+	sendMessage (Message::SetFocus, 0);
+}
+
+//------------------------------------------------------------------------
+void ScintillaEditorView::takeFocus ()
+{
+	sendMessage (Message::SetFocus, 1);
+	sendMessage (Message::GrabFocus);
+}
+
+//------------------------------------------------------------------------
 void ScintillaEditorView::setStyleColor (uint32_t index, const CColor& textColor,
                                          const CColor& backColor)
 {
@@ -106,27 +126,53 @@ CColor ScintillaEditorView::getBackgroundColor () const
 //------------------------------------------------------------------------
 void ScintillaEditorView::setSelectionBackgroundColor (const CColor& color)
 {
-	bool enable = color != kTransparentCColor;
 	sendMessage (Message::SetElementColour, Element::SelectionBack, toScintillaColor (color));
-}
-
-//------------------------------------------------------------------------
-void ScintillaEditorView::setSelectionForegroundColor (const CColor& color)
-{
-	bool enable = color != kTransparentCColor;
-	sendMessage (Message::SetElementColour, Element::SelectionText, toScintillaColor (color));
 }
 
 //------------------------------------------------------------------------
 CColor ScintillaEditorView::getSelectionBackgroundColor () const
 {
-	return selectionBackgroundColor;
+	return fromScintillaColor (sendMessage (Message::GetElementColour, Element::SelectionBack));
+}
+
+//------------------------------------------------------------------------
+void ScintillaEditorView::setSelectionForegroundColor (const CColor& color)
+{
+	sendMessage (Message::SetElementColour, Element::SelectionText, toScintillaColor (color));
 }
 
 //------------------------------------------------------------------------
 CColor ScintillaEditorView::getSelectionForegroundColor () const
 {
-	return selectionForegroundColor;
+	return fromScintillaColor (sendMessage (Message::GetElementColour, Element::SelectionText));
+}
+
+//------------------------------------------------------------------------
+void ScintillaEditorView::setInactiveSelectionBackgroundColor (const CColor& color)
+{
+	sendMessage (Message::SetElementColour, Element::SelectionInactiveBack,
+	             toScintillaColor (color));
+}
+
+//------------------------------------------------------------------------
+CColor ScintillaEditorView::getInactiveSelectionBackgroundColor () const
+{
+	return fromScintillaColor (
+	    sendMessage (Message::GetElementColour, Element::SelectionInactiveBack));
+}
+
+//------------------------------------------------------------------------
+void ScintillaEditorView::setInactiveSelectionForegroundColor (const CColor& color)
+{
+	sendMessage (Message::SetElementColour, Element::SelectionInactiveText,
+	             toScintillaColor (color));
+}
+
+//------------------------------------------------------------------------
+CColor ScintillaEditorView::getInactiveSelectionForegroundColor () const
+{
+	return fromScintillaColor (
+	    sendMessage (Message::GetElementColour, Element::SelectionInactiveText));
 }
 
 //------------------------------------------------------------------------
@@ -169,6 +215,7 @@ void ScintillaEditorView::redo ()
 void ScintillaEditorView::setText (UTF8StringPtr text)
 {
 	sendMessage (Message::SetText, 0, text);
+	sendMessage (Message::EmptyUndoBuffer);
 }
 
 //------------------------------------------------------------------------
@@ -416,6 +463,9 @@ void ScintillaEditorView::updateMarginsColumns ()
 		sendMessage (Message::MarkerDefine, MarkerOutline::FolderSub, MarkerSymbol::Empty);
 		sendMessage (Message::MarkerDefine, MarkerOutline::FolderTail, MarkerSymbol::Empty);
 
+		sendMessage (Message::SetAutomaticFold,
+		             SC_AUTOMATICFOLD_SHOW | SC_AUTOMATICFOLD_CHANGE | SC_AUTOMATICFOLD_CLICK);
+
 		if (lexer)
 		{
 			lexer->PropertySet ("fold", "1");
@@ -448,6 +498,7 @@ int32_t ScintillaEditorView::getFoldingIndex () const
 //------------------------------------------------------------------------
 void ScintillaEditorView::onScintillaNotification (SCNotification* notification)
 {
+#if 0
 	assert (notification);
 	if (notification->nmhdr.code == SCN_MARGINCLICK)
 	{
@@ -457,6 +508,7 @@ void ScintillaEditorView::onScintillaNotification (SCNotification* notification)
 			sendMessage (Message::ToggleFold, line);
 		}
 	}
+#endif
 }
 
 //------------------------------------------------------------------------
@@ -474,6 +526,8 @@ static std::string kAttrLineNumberFontColor = "line-number-font-color";
 static std::string kAttrLineNumberBackgroundColor = "line-number-background-color";
 static std::string kAttrSelectionBackgroundColor = "selection-background-color";
 static std::string kAttrSelectionForegroundColor = "selection-foreground-color";
+static std::string kAttrInactiveSelectionBackgroundColor = "selection-inactive-background-color";
+static std::string kAttrInactiveSelectionForegroundColor = "selection-inactive-foreground-color";
 static std::string kAttrShowLineNumbers = "show-line-numbers";
 static std::string kAttrShowFolding = "show-folding";
 static std::string kAttrUseTabs = "use-tabs";
@@ -504,6 +558,8 @@ public:
 		// selection
 		attributeNames.push_back (kAttrSelectionBackgroundColor);
 		attributeNames.push_back (kAttrSelectionForegroundColor);
+		attributeNames.push_back (kAttrInactiveSelectionBackgroundColor);
+		attributeNames.push_back (kAttrInactiveSelectionForegroundColor);
 		// folding
 		attributeNames.push_back (kAttrShowFolding);
 		// line-number
@@ -530,6 +586,10 @@ public:
 		if (attributeName == kAttrSelectionBackgroundColor)
 			return kColorType;
 		if (attributeName == kAttrSelectionForegroundColor)
+			return kColorType;
+		if (attributeName == kAttrInactiveSelectionBackgroundColor)
+			return kColorType;
+		if (attributeName == kAttrInactiveSelectionForegroundColor)
 			return kColorType;
 		if (attributeName == kAttrShowFolding)
 			return kBooleanType;
@@ -569,6 +629,16 @@ public:
 		if (stringToColor (attr.getAttributeValue (kAttrSelectionForegroundColor), color, desc))
 		{
 			sev->setSelectionForegroundColor (color);
+		}
+		if (stringToColor (attr.getAttributeValue (kAttrInactiveSelectionBackgroundColor), color,
+		                   desc))
+		{
+			sev->setInactiveSelectionBackgroundColor (color);
+		}
+		if (stringToColor (attr.getAttributeValue (kAttrInactiveSelectionForegroundColor), color,
+		                   desc))
+		{
+			sev->setInactiveSelectionForegroundColor (color);
 		}
 		if (stringToColor (attr.getAttributeValue (kAttrLineNumberFontColor), color, desc))
 		{
@@ -652,6 +722,16 @@ public:
 		if (attName == kAttrSelectionForegroundColor)
 		{
 			auto color = sev->getSelectionForegroundColor ();
+			return colorToString (color, stringValue, desc);
+		}
+		if (attName == kAttrInactiveSelectionBackgroundColor)
+		{
+			auto color = sev->getInactiveSelectionBackgroundColor ();
+			return colorToString (color, stringValue, desc);
+		}
+		if (attName == kAttrInactiveSelectionForegroundColor)
+		{
+			auto color = sev->getInactiveSelectionForegroundColor ();
 			return colorToString (color, stringValue, desc);
 		}
 		if (attName == kAttrLineNumberFontColor)

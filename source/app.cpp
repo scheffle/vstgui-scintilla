@@ -16,6 +16,7 @@
 #include "Scintilla.h"
 #include "SciLexer.h"
 #include "ILexer.h"
+#include "ScintillaMessages.h"
 
 using namespace VSTGUI;
 using namespace VSTGUI::Standalone;

@@ -53,11 +53,6 @@ public:
 	void setBackgroundColor (const CColor& color);
 	CColor getBackgroundColor () const;
 
-	void setSelectionBackgroundColor (const CColor& color);
-	void setSelectionForegroundColor (const CColor& color);
-	CColor getSelectionBackgroundColor () const;
-	CColor getSelectionForegroundColor () const;
-
 	void setCaretColor (const CColor& color);
 	CColor getCaretColor () const;
 
@@ -72,6 +67,16 @@ public:
 	Selection getSelection () const;
 	void setSelection (Selection selection);
 	bool replaceSelection (UTF8StringPtr string);
+
+	void setSelectionBackgroundColor (const CColor& color);
+	CColor getSelectionBackgroundColor () const;
+	void setSelectionForegroundColor (const CColor& color);
+	CColor getSelectionForegroundColor () const;
+
+	void setInactiveSelectionBackgroundColor (const CColor& color);
+	CColor getInactiveSelectionBackgroundColor () const;
+	void setInactiveSelectionForegroundColor (const CColor& color);
+	CColor getInactiveSelectionForegroundColor () const;
 
 	// ------------------------------------
 	// Search
@@ -164,10 +169,14 @@ public:
 	bool removed (CView* parent) override;
 	void setViewSize (const CRect& rect, bool invalid) override;
 	void setMouseEnabled (bool bEnable = true) override;
+	void looseFocus () override;
+	void takeFocus () override;
 
 	struct Impl;
 
 private:
+	void init ();
+
 	void onScintillaNotification (SCNotification* notification) override;
 	void draw (CDrawContext* pContext) override;
 	void platformSetBackgroundColor (const CColor& color);
@@ -176,9 +185,6 @@ private:
 
 	SharedPointer<CFontDesc> font;
 	Scintilla::ILexer5* lexer {nullptr};
-	CColor selectionBackgroundColor {kTransparentCColor};
-	CColor selectionForegroundColor {kTransparentCColor};
-	CColor staticFontColor {kTransparentCColor};
 
 	enum MarginsCol
 	{

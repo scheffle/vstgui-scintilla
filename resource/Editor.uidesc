@@ -9,13 +9,16 @@
 			}
 		},
 		"colors": {
+			"EditorBackground": "#212121ff",
 			"WindowBackground": "#4f4f4fff",
-			"font": "#f8f8f800",
-			"linenumber.background": "#000000ff",
-			"linenumber.font": "#ffffffff",
-			"selection.background": "#698dffff",
-			"selection.foreground": "#ffffffff"
+			"font": "#e7e7e7ff",
+			"linenumber.background": "#353535ff",
+			"linenumber.font": "#b4b4b4ff",
+			"selection.background": "#0034b6ff",
+			"selection.foreground": "#e6e6e6ff",
+			"selection.inactive.background": "#5b5b5bff"
 		},
+		"gradients": {},
 		"control-tags": {},
 		"custom": {
 			"UIDescFilePath": {
@@ -30,13 +33,13 @@
 			},
 			"UIEditController": {
 				"EditViewScale": "1",
-				"EditorSize": "0, 0, 1099, 863",
-				"SplitViewSize_0_0": "0.7025089605734766706746086128987371921539",
-				"SplitViewSize_0_1": "0.2735961768219832834780902430793503299356",
-				"SplitViewSize_1_0": "0.491039426523297517501731590527924709022",
-				"SplitViewSize_1_1": "0.5029868578255675126698065469099674373865",
-				"SplitViewSize_2_0": "0.6960873521383075246404814606648869812489",
-				"SplitViewSize_2_1": "0.299363057324840753370409629496862180531",
+				"EditorSize": "0, 0, 1045, 844",
+				"SplitViewSize_0_0": "0.6955990220048899885796345188282430171967",
+				"SplitViewSize_0_1": "0.2799511002444987628479111663182266056538",
+				"SplitViewSize_1_0": "0.4914425427872860518974107435496989637613",
+				"SplitViewSize_1_1": "0.5036674816625916761836379009764641523361",
+				"SplitViewSize_2_0": "0.6803827751196172002323692140635102987289",
+				"SplitViewSize_2_1": "0.3148325358851674637961082225956488400698",
 				"TabSwitchValue": "2",
 				"Version": "1"
 			},
@@ -45,10 +48,13 @@
 				"SelectedRow": "2"
 			},
 			"UIColorsDataSource": {
-				"SelectedRow": "2"
+				"SelectedRow": "5"
 			},
 			"UIFontsDataSource": {
 				"SelectedRow": "0"
+			},
+			"UIGradientsDataSource": {
+				"SelectedRow": "-1"
 			}
 		},
 		"templates": {
@@ -70,7 +76,7 @@
 					"ScintillaEditorView": {
 						"attributes": {
 							"autosize": "left right top bottom ",
-							"background-color": "WindowBackground",
+							"background-color": "EditorBackground",
 							"class": "ScintillaEditorView",
 							"editor-font": "EditorFont",
 							"editor-margin": "10, 10",
@@ -83,6 +89,10 @@
 							"origin": "20, 50",
 							"selection-background-color": "selection.background",
 							"selection-foreground-color": "selection.foreground",
+							"selection-inactive-background-color": "selection.inactive.background",
+							"selection-inactive-foreground-color": "selection.foreground",
+							"show-folding": "true",
+							"show-line-numbers": "true",
 							"size": "610, 400",
 							"tab-width": "4",
 							"transparent": "false",
