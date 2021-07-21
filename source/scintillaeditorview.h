@@ -133,9 +133,8 @@ public:
 
 	// ------------------------------------
 	// Lexer
-	void setLexerLanguage (IdStringPtr lang);
-	std::string getLexerLanguage () const;
-	Scintilla::ILexer5* getLexer () const { return lexer; }
+	void setLexer (Scintilla::ILexer5* lexer);
+	Scintilla::ILexer5* getLexer () const;
 
 	/** set style color */
 	void setStyleColor (uint32_t index, const CColor& textColor,
@@ -143,6 +142,8 @@ public:
 	/** set style font weight [1..999] where normal=400, semibold=600, bold=700 */
 	void setStyleFontWeight (uint32_t index, uint32_t weight);
 
+	// ------------------------------------
+	// Low-level
 	/** send a message to the scintilla backend */
 	intptr_t sendMessage (uint32_t message, uintptr_t wParam, intptr_t lParam) const;
 

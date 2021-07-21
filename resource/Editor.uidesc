@@ -14,9 +14,9 @@
 			"font": "#e7e7e7ff",
 			"linenumber.background": "#353535ff",
 			"linenumber.font": "#b4b4b4ff",
-			"selection.background": "#0034b6ff",
+			"selection.background": "#0e53ffa0",
 			"selection.foreground": "#e6e6e6ff",
-			"selection.inactive.background": "#5b5b5bff"
+			"selection.inactive.background": "#5b5b5b84"
 		},
 		"gradients": {},
 		"control-tags": {},
@@ -40,7 +40,7 @@
 				"SplitViewSize_1_1": "0.5036674816625916761836379009764641523361",
 				"SplitViewSize_2_0": "0.6803827751196172002323692140635102987289",
 				"SplitViewSize_2_1": "0.3148325358851674637961082225956488400698",
-				"TabSwitchValue": "2",
+				"TabSwitchValue": "6",
 				"Version": "1"
 			},
 			"UIAttributesController": {},

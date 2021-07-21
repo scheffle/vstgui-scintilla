@@ -14,8 +14,6 @@
 #include "vstgui/uidescription/uiviewfactory.h"
 
 #include "ILexer.h"
-#include "Lexilla.h"
-#include "LexillaAccess.h"
 #include "Scintilla.h"
 #include "ScintillaMessages.h"
 #include "ScintillaTypes.h"
@@ -23,6 +21,7 @@
 //------------------------------------------------------------------------
 namespace VSTGUI {
 using Message = Scintilla::Message;
+using Notification = Scintilla::Notification;
 using StylesCommon = Scintilla::StylesCommon;
 using Element = Scintilla::Element;
 using MarkerSymbol = Scintilla::MarkerSymbol;
@@ -33,6 +32,9 @@ void ScintillaEditorView::init ()
 {
 	setWantsFocus (true);
 	updateMarginsColumns ();
+	registerListener (this);
+	sendMessage (Message::SetPhasesDraw, SC_PHASES_TWO);
+	sendMessage (Message::SetSelectionLayer, SC_LAYER_UNDER_TEXT);
 }
 
 //------------------------------------------------------------------------
@@ -333,28 +335,16 @@ uint32_t ScintillaEditorView::getTabWidth () const
 }
 
 //------------------------------------------------------------------------
-void ScintillaEditorView::setLexerLanguage (IdStringPtr lang)
+void ScintillaEditorView::setLexer (Scintilla::ILexer5* inLexer)
 {
-	if (lexer)
-	{
-		if (auto lexerName = lexer->GetName ())
-		{
-			if (std::string_view (lang) == lexerName)
-				return;
-		}
-	}
-	lexer = CreateLexer (lang);
+	lexer = inLexer;
 	sendMessage (Message::SetILexer, 0, lexer);
 }
 
 //------------------------------------------------------------------------
-std::string ScintillaEditorView::getLexerLanguage () const
+Scintilla::ILexer5* ScintillaEditorView::getLexer () const
 {
-	std::string result;
-	auto length = sendMessage (Message::GetLexerLanguage);
-	result.resize (length);
-	sendMessage (Message::GetLexerLanguage, 0, result.data ());
-	return result;
+	return lexer;
 }
 
 //------------------------------------------------------------------------
@@ -410,12 +400,10 @@ void ScintillaEditorView::setFoldingVisible (bool state)
 	if (state)
 	{
 		marginsCol |= (1 << MarginsCol::Folding);
-		registerListener (this);
 	}
 	else
 	{
 		marginsCol &= ~(1 << MarginsCol::Folding);
-		unregisterListener (this);
 	}
 
 	updateMarginsColumns ();
@@ -498,17 +486,11 @@ int32_t ScintillaEditorView::getFoldingIndex () const
 //------------------------------------------------------------------------
 void ScintillaEditorView::onScintillaNotification (SCNotification* notification)
 {
-#if 0
 	assert (notification);
-	if (notification->nmhdr.code == SCN_MARGINCLICK)
+	switch (static_cast<Notification> (notification->nmhdr.code))
 	{
-		if (notification->margin == getFoldingIndex ())
-		{
-			auto line = sendMessage (Message::LineFromPosition, notification->position);
-			sendMessage (Message::ToggleFold, line);
-		}
+		default: break;
 	}
-#endif
 }
 
 //------------------------------------------------------------------------
@@ -532,7 +514,6 @@ static std::string kAttrShowLineNumbers = "show-line-numbers";
 static std::string kAttrShowFolding = "show-folding";
 static std::string kAttrUseTabs = "use-tabs";
 static std::string kAttrTabWidth = "tab-width";
-static std::string kAttrLexer = "lexer";
 
 //-----------------------------------------------------------------------------
 class ScintillaEditorViewCreator : public ViewCreatorAdapter
@@ -548,8 +529,6 @@ public:
 	}
 	bool getAttributeNames (std::list<std::string>& attributeNames) const override
 	{
-		// lexer
-		attributeNames.push_back (kAttrLexer);
 		// margin
 		attributeNames.push_back (kAttrEditorMargin);
 		// font
@@ -575,8 +554,6 @@ public:
 	}
 	AttrType getAttributeType (const std::string& attributeName) const override
 	{
-		if (attributeName == kAttrLexer)
-			return kStringType;
 		if (attributeName == kAttrEditorMargin)
 			return kPointType;
 		if (attributeName == kAttrEditorFont)
@@ -612,10 +589,6 @@ public:
 		auto sev = dynamic_cast<ScintillaEditorView*> (view);
 		if (!sev)
 			return false;
-		if (auto lang = attr.getAttributeValue (kAttrLexer))
-		{
-			sev->setLexerLanguage (lang->data ());
-		}
 		CColor color;
 		if (stringToColor (attr.getAttributeValue (UIViewCreator::kAttrBackgroundColor), color,
 		                   desc))
@@ -692,11 +665,6 @@ public:
 		auto sev = dynamic_cast<ScintillaEditorView*> (view);
 		if (!sev)
 			return false;
-		if (attName == kAttrLexer)
-		{
-			stringValue = sev->getLexerLanguage ();
-			return true;
-		}
 		if (attName == kAttrEditorMargin)
 		{
 			CPoint p;
