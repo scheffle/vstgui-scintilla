@@ -473,17 +473,6 @@ void ScintillaEditorView::updateMarginsColumns ()
 }
 
 //------------------------------------------------------------------------
-int32_t ScintillaEditorView::getFoldingIndex () const
-{
-	int32_t index = -1;
-	if (getFoldingVisible ())
-		index = 0;
-	if (getLineNumbersVisible ())
-		++index;
-	return index;
-}
-
-//------------------------------------------------------------------------
 void ScintillaEditorView::onScintillaNotification (SCNotification* notification)
 {
 	assert (notification);

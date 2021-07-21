@@ -182,7 +182,6 @@ private:
 	void draw (CDrawContext* pContext) override;
 	void platformSetBackgroundColor (const CColor& color);
 	void updateMarginsColumns ();
-	int32_t getFoldingIndex () const;
 
 	SharedPointer<CFontDesc> font;
 	Scintilla::ILexer5* lexer {nullptr};
