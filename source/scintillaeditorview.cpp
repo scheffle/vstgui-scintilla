@@ -13,7 +13,6 @@
 #include "vstgui/uidescription/uiviewcreator.h"
 #include "vstgui/uidescription/uiviewfactory.h"
 
-#include "ILexer.h"
 #include "Scintilla.h"
 #include "ScintillaMessages.h"
 #include "ScintillaTypes.h"
@@ -537,12 +536,6 @@ void ScintillaEditorView::updateMarginsColumns ()
 
 		sendMessage (Message::SetAutomaticFold,
 		             AutomaticFold::Show | AutomaticFold::Change | AutomaticFold::Click);
-
-		if (lexer)
-		{
-			lexer->PropertySet ("fold", "1");
-			lexer->PropertySet ("fold.comment", "1");
-		}
 	}
 	if (count == 0)
 	{
