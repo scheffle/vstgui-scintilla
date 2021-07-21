@@ -12,7 +12,12 @@
 
 struct SCNotification; // forward
 
-namespace Scintilla { class ILexer5; };
+namespace Scintilla {
+class ILexer5;
+enum class Wrap;
+enum class WrapIndentMode;
+enum class WrapVisualFlag;
+};
 
 //------------------------------------------------------------------------
 namespace VSTGUI {
@@ -130,6 +135,17 @@ public:
 	void setFoldingBackgroundColor (const CColor& color);
 	CColor getFoldingBackgroundColor () const;
 #endif
+
+	// ------------------------------------
+	// Line Wrap
+	void setLineWrap (Scintilla::Wrap mode);
+	Scintilla::Wrap getLineWrap () const;
+	void setLineWrapStartIndent (uint32_t amount);
+	uint32_t getLineWrapStartIndent () const;
+	void setLineWrapIndentMode (Scintilla::WrapIndentMode mode);
+	Scintilla::WrapIndentMode getLineWrapIndentMode () const;
+	void setLineWrapVisualFlags (Scintilla::WrapVisualFlag flags);
+	Scintilla::WrapVisualFlag getLineWrapVisualFlags () const;
 
 	// ------------------------------------
 	// Lexer

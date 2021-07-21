@@ -18,6 +18,8 @@
 #include "ScintillaMessages.h"
 #include "ScintillaTypes.h"
 
+#include <array>
+
 //------------------------------------------------------------------------
 namespace VSTGUI {
 using Message = Scintilla::Message;
@@ -26,6 +28,40 @@ using StylesCommon = Scintilla::StylesCommon;
 using Element = Scintilla::Element;
 using MarkerSymbol = Scintilla::MarkerSymbol;
 using MarkerOutline = Scintilla::MarkerOutline;
+using AutomaticFold = Scintilla::AutomaticFold;
+using WrapVisualFlag = Scintilla::WrapVisualFlag;
+
+//------------------------------------------------------------------------
+constexpr AutomaticFold operator| (AutomaticFold a, AutomaticFold b) noexcept
+{
+	return static_cast<AutomaticFold> (static_cast<int> (a) | static_cast<int> (b));
+}
+
+//------------------------------------------------------------------------
+constexpr WrapVisualFlag operator| (WrapVisualFlag a, WrapVisualFlag b) noexcept
+{
+	return static_cast<WrapVisualFlag> (static_cast<int> (a) | static_cast<int> (b));
+}
+
+//------------------------------------------------------------------------
+constexpr bool operator& (WrapVisualFlag a, WrapVisualFlag b) noexcept
+{
+	return static_cast<bool> (static_cast<int> (a) & static_cast<int> (b));
+}
+
+//------------------------------------------------------------------------
+inline WrapVisualFlag& operator|= (WrapVisualFlag& a, WrapVisualFlag b) noexcept
+{
+	a = a | b;
+	return a;
+}
+
+//------------------------------------------------------------------------
+inline WrapVisualFlag& operator^= (WrapVisualFlag& a, WrapVisualFlag b) noexcept
+{
+	a = static_cast<WrapVisualFlag> (static_cast<int> (a) & ~static_cast<int> (b));
+	return a;
+}
 
 //------------------------------------------------------------------------
 void ScintillaEditorView::init ()
@@ -33,8 +69,8 @@ void ScintillaEditorView::init ()
 	setWantsFocus (true);
 	updateMarginsColumns ();
 	registerListener (this);
-	sendMessage (Message::SetPhasesDraw, SC_PHASES_TWO);
-	sendMessage (Message::SetSelectionLayer, SC_LAYER_UNDER_TEXT);
+	sendMessage (Message::SetPhasesDraw, Scintilla::PhasesDraw::Two);
+	sendMessage (Message::SetSelectionLayer, Scintilla::Layer::UnderText);
 }
 
 //------------------------------------------------------------------------
@@ -74,7 +110,7 @@ void ScintillaEditorView::setFont (const SharedPointer<CFontDesc>& _font)
 	bool isBold = font->getStyle () & kBoldFace;
 	bool isItalic = font->getStyle () & kItalicFace;
 	const auto& fontName = font->getName ();
-	auto fontSize = font->getSize () * static_cast<CCoord> (SC_FONT_SIZE_MULTIPLIER);
+	auto fontSize = font->getSize () * static_cast<CCoord> (Scintilla::FontSizeMultiplier);
 	for (int i = 0; i < 128; i++)
 	{
 		sendMessage (Message::StyleSetFont, i, fontName.data ());
@@ -252,13 +288,13 @@ void ScintillaEditorView::setSelection (Selection selection)
 //------------------------------------------------------------------------
 int64_t ScintillaEditorView::findAndSelect (UTF8StringPtr searchString, uint32_t searchFlags)
 {
-	int sciSearchFlags = 0;
+	auto sciSearchFlags = Scintilla::FindOption::None;
 	if (searchFlags & MatchCase)
-		sciSearchFlags |= SCFIND_MATCHCASE;
+		sciSearchFlags |= Scintilla::FindOption::MatchCase;
 	if (searchFlags & WholeWord)
-		sciSearchFlags |= SCFIND_WHOLEWORD;
+		sciSearchFlags |= Scintilla::FindOption::WholeWord;
 	if (searchFlags & WordStart)
-		sciSearchFlags |= SCFIND_WORDSTART;
+		sciSearchFlags |= Scintilla::FindOption::WordStart;
 
 	auto selection = getSelection ();
 
@@ -348,6 +384,54 @@ Scintilla::ILexer5* ScintillaEditorView::getLexer () const
 }
 
 //------------------------------------------------------------------------
+void ScintillaEditorView::setLineWrap (Scintilla::Wrap mode)
+{
+	sendMessage (Message::SetWrapMode, mode);
+}
+
+//------------------------------------------------------------------------
+auto ScintillaEditorView::getLineWrap () const -> Scintilla::Wrap
+{
+	return static_cast<Scintilla::Wrap> (sendMessage (Message::GetWrapMode));
+}
+
+//------------------------------------------------------------------------
+void ScintillaEditorView::setLineWrapStartIndent (uint32_t amount)
+{
+	sendMessage (Message::SetWrapStartIndent, amount);
+}
+
+//------------------------------------------------------------------------
+uint32_t ScintillaEditorView::getLineWrapStartIndent () const
+{
+	return sendMessage (Message::GetWrapStartIndent);
+}
+
+//------------------------------------------------------------------------
+void ScintillaEditorView::setLineWrapIndentMode (Scintilla::WrapIndentMode mode)
+{
+	sendMessage (Message::SetWrapIndentMode, mode);
+}
+
+//------------------------------------------------------------------------
+Scintilla::WrapIndentMode ScintillaEditorView::getLineWrapIndentMode () const
+{
+	return static_cast<Scintilla::WrapIndentMode> (sendMessage (Message::GetWrapIndentMode));
+}
+
+//------------------------------------------------------------------------
+void ScintillaEditorView::setLineWrapVisualFlags (WrapVisualFlag flags)
+{
+	sendMessage (Message::SetWrapVisualFlags, flags);
+}
+
+//------------------------------------------------------------------------
+WrapVisualFlag ScintillaEditorView::getLineWrapVisualFlags () const
+{
+	return static_cast<WrapVisualFlag> (sendMessage (Message::GetWrapVisualFlags));
+}
+
+//------------------------------------------------------------------------
 void ScintillaEditorView::setLineNumbersVisible (bool state)
 {
 	auto currentState = (marginsCol & (1 << MarginsCol::LineNumber));
@@ -431,15 +515,15 @@ void ScintillaEditorView::updateMarginsColumns ()
 	uint32_t column = 0;
 	if (lineNumbers)
 	{
-		sendMessage (Message::SetMarginTypeN, column, SC_MARGIN_NUMBER);
+		sendMessage (Message::SetMarginTypeN, column, Scintilla::MarginType::Number);
 		auto width = sendMessage (Message::TextWidth, StylesCommon::LineNumber, "_99999");
 		sendMessage (Message::SetMarginWidthN, column, width);
 		++column;
 	}
 	if (folding)
 	{
-		sendMessage (Message::SetMarginTypeN, column, SC_MARGIN_SYMBOL);
-		sendMessage (Message::SetMarginMaskN, column, SC_MASK_FOLDERS);
+		sendMessage (Message::SetMarginTypeN, column, Scintilla::MarginType::Symbol);
+		sendMessage (Message::SetMarginMaskN, column, Scintilla::MaskFolders);
 		sendMessage (Message::SetMarginWidthN, column, 20);
 		sendMessage (Message::SetMarginSensitiveN, column, 1);
 
@@ -452,7 +536,7 @@ void ScintillaEditorView::updateMarginsColumns ()
 		sendMessage (Message::MarkerDefine, MarkerOutline::FolderTail, MarkerSymbol::Empty);
 
 		sendMessage (Message::SetAutomaticFold,
-		             SC_AUTOMATICFOLD_SHOW | SC_AUTOMATICFOLD_CHANGE | SC_AUTOMATICFOLD_CLICK);
+		             AutomaticFold::Show | AutomaticFold::Change | AutomaticFold::Click);
 
 		if (lexer)
 		{
@@ -503,6 +587,12 @@ static std::string kAttrShowLineNumbers = "show-line-numbers";
 static std::string kAttrShowFolding = "show-folding";
 static std::string kAttrUseTabs = "use-tabs";
 static std::string kAttrTabWidth = "tab-width";
+static std::string kAttrLineWrapMode = "line-wrap-mode";
+static std::string kAttrLineWrapIndentMode = "line-wrap-indent-mode";
+static std::string kAttrLineWrapStartIndent = "line-wrap-start-indent";
+static std::string kAttrLineWrapVisualStart = "line-wrap-visual-start";
+static std::string kAttrLineWrapVisualEnd = "line-wrap-visual-end";
+static std::string kAttrLineWrapVisualMargin = "line-wrap-visual-margin";
 
 //-----------------------------------------------------------------------------
 class ScintillaEditorViewCreator : public ViewCreatorAdapter
@@ -528,6 +618,13 @@ public:
 		attributeNames.push_back (kAttrSelectionForegroundColor);
 		attributeNames.push_back (kAttrInactiveSelectionBackgroundColor);
 		attributeNames.push_back (kAttrInactiveSelectionForegroundColor);
+		// line wrap
+		attributeNames.push_back (kAttrLineWrapMode);
+		attributeNames.push_back (kAttrLineWrapVisualStart);
+		attributeNames.push_back (kAttrLineWrapVisualEnd);
+		attributeNames.push_back (kAttrLineWrapVisualMargin);
+		attributeNames.push_back (kAttrLineWrapIndentMode);
+		attributeNames.push_back (kAttrLineWrapStartIndent);
 		// folding
 		attributeNames.push_back (kAttrShowFolding);
 		// line-number
@@ -557,6 +654,18 @@ public:
 			return kColorType;
 		if (attributeName == kAttrInactiveSelectionForegroundColor)
 			return kColorType;
+		if (attributeName == kAttrLineWrapMode)
+			return kListType;
+		if (attributeName == kAttrLineWrapIndentMode)
+			return kListType;
+		if (attributeName == kAttrLineWrapStartIndent)
+			return kIntegerType;
+		if (attributeName == kAttrLineWrapVisualStart)
+			return kBooleanType;
+		if (attributeName == kAttrLineWrapVisualEnd)
+			return kBooleanType;
+		if (attributeName == kAttrLineWrapVisualMargin)
+			return kBooleanType;
 		if (attributeName == kAttrShowFolding)
 			return kBooleanType;
 		if (attributeName == kAttrShowLineNumbers)
@@ -646,6 +755,55 @@ public:
 			sev->sendMessage (Message::SetMarginLeft, 0, p.x);
 			sev->sendMessage (Message::SetMarginRight, 0, p.y);
 		}
+		if (auto mode = attr.getAttributeValue (kAttrLineWrapMode))
+		{
+			for (auto index = 0; index < getLineWrapModes ().size (); ++index)
+			{
+				if (*mode == getLineWrapModes ()[index])
+				{
+					sev->setLineWrap (static_cast<Scintilla::Wrap> (index));
+					break;
+				}
+			}
+		}
+		if (auto mode = attr.getAttributeValue (kAttrLineWrapIndentMode))
+		{
+			for (auto index = 0; index < getLineWrapIndentModes ().size (); ++index)
+			{
+				if (*mode == getLineWrapIndentModes ()[index])
+				{
+					sev->setLineWrapIndentMode (static_cast<Scintilla::WrapIndentMode> (index));
+					break;
+				}
+			}
+		}
+		if (attr.getIntegerAttribute (kAttrLineWrapStartIndent, i))
+		{
+			sev->setLineWrapStartIndent (static_cast<uint32_t> (i));
+		}
+		auto visualFlags = sev->getLineWrapVisualFlags ();
+		if (attr.getBooleanAttribute (kAttrLineWrapVisualStart, b))
+		{
+			if (b)
+				visualFlags |= WrapVisualFlag::Start;
+			else
+				visualFlags ^= WrapVisualFlag::Start;
+		}
+		if (attr.getBooleanAttribute (kAttrLineWrapVisualEnd, b))
+		{
+			if (b)
+				visualFlags |= WrapVisualFlag::End;
+			else
+				visualFlags ^= WrapVisualFlag::End;
+		}
+		if (attr.getBooleanAttribute (kAttrLineWrapVisualMargin, b))
+		{
+			if (b)
+				visualFlags |= WrapVisualFlag::Margin;
+			else
+				visualFlags ^= WrapVisualFlag::Margin;
+		}
+		sev->setLineWrapVisualFlags (visualFlags);
 		return true;
 	}
 	bool getAttributeValue (CView* view, const std::string& attName, std::string& stringValue,
@@ -728,10 +886,73 @@ public:
 		}
 		if (attName == kAttrTabWidth)
 		{
-			stringValue = std::to_string (sev->getTabWidth ());
+			stringValue = UIAttributes::integerToString (sev->getTabWidth ());
+			return true;
+		}
+		if (attName == kAttrLineWrapMode)
+		{
+			auto index = static_cast<size_t> (sev->getLineWrap ());
+			stringValue = getLineWrapModes ()[index];
+			return true;
+		}
+		if (attName == kAttrLineWrapIndentMode)
+		{
+			auto index = static_cast<size_t> (sev->getLineWrapIndentMode ());
+			stringValue = getLineWrapIndentModes ()[index];
+			return true;
+		}
+		if (attName == kAttrLineWrapStartIndent)
+		{
+			stringValue = UIAttributes::integerToString (sev->getLineWrapStartIndent ());
+			return true;
+		}
+		if (attName == kAttrLineWrapVisualStart)
+		{
+			stringValue =
+			    (sev->getLineWrapVisualFlags () & WrapVisualFlag::Start) ? "true" : "false";
+			return true;
+		}
+		if (attName == kAttrLineWrapVisualEnd)
+		{
+			stringValue = (sev->getLineWrapVisualFlags () & WrapVisualFlag::End) ? "true" : "false";
+			return true;
+		}
+		if (attName == kAttrLineWrapVisualMargin)
+		{
+			stringValue =
+			    (sev->getLineWrapVisualFlags () & WrapVisualFlag::Margin) ? "true" : "false";
 			return true;
 		}
 
+		return false;
+	}
+	using LineWrapModes = std::array<string, 4>;
+	static LineWrapModes& getLineWrapModes ()
+	{
+		static LineWrapModes modes = {"None", "Word", "Char", "White Space"};
+		return modes;
+	}
+	using LineWrapIndentModes = std::array<string, 4>;
+	static LineWrapIndentModes& getLineWrapIndentModes ()
+	{
+		static LineWrapIndentModes modes = {"Fixed", "Same", "Indent", "Deep Indent"};
+		return modes;
+	}
+	bool getPossibleListValues (const string& attributeName,
+	                            ConstStringPtrList& values) const override
+	{
+		if (attributeName == kAttrLineWrapMode)
+		{
+			for (auto& m : getLineWrapModes ())
+				values.emplace_back (&m);
+			return true;
+		}
+		if (attributeName == kAttrLineWrapIndentMode)
+		{
+			for (auto& m : getLineWrapIndentModes ())
+				values.emplace_back (&m);
+			return true;
+		}
 		return false;
 	}
 };
