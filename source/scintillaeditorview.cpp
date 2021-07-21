@@ -532,29 +532,29 @@ Scintilla::FoldDisplayTextStyle ScintillaEditorView::getFoldDisplayTextStyle () 
 }
 
 //------------------------------------------------------------------------
-void ScintillaEditorView::setFoldMarginForegroundColor (const CColor& color)
+void ScintillaEditorView::setFoldMarginColorHi (const CColor& color)
 {
-	foldMarginForegroundColor = color;
+	foldMarginColorHi = color;
 	sendMessage (Message::SetFoldMarginHiColour, true, toScintillaColor (color));
 }
 
 //------------------------------------------------------------------------
-CColor ScintillaEditorView::getFoldMarginForegroundColor () const
+CColor ScintillaEditorView::getFoldMarginColorHi () const
 {
-	return foldMarginForegroundColor;
+	return foldMarginColorHi;
 }
 
 //------------------------------------------------------------------------
-void ScintillaEditorView::setFoldMarginBackgroundColor (const CColor& color)
+void ScintillaEditorView::setFoldMarginColor (const CColor& color)
 {
-	foldMarginBackgroundColor = color;
+	foldMarginColor = color;
 	sendMessage (Message::SetFoldMarginColour, true, toScintillaColor (color));
 }
 
 //------------------------------------------------------------------------
-CColor ScintillaEditorView::getFoldMarginBackgroundColor () const
+CColor ScintillaEditorView::getFoldMarginColor () const
 {
-	return foldMarginBackgroundColor;
+	return foldMarginColor;
 }
 
 //------------------------------------------------------------------------
@@ -659,8 +659,8 @@ static std::string kAttrInactiveSelectionBackgroundColor = "selection-inactive-b
 static std::string kAttrInactiveSelectionForegroundColor = "selection-inactive-foreground-color";
 static std::string kAttrShowLineNumbers = "show-line-numbers";
 static std::string kAttrShowFolding = "show-folding";
-static std::string kAttrFoldMarginBackgroundColor = "fold-margin-background-color";
-static std::string kAttrFoldMarginForegroundColor = "fold-margin-foreground-color";
+static std::string kAttrFoldMarginColor = "fold-margin-color";
+static std::string kAttrFoldMarginColorHi = "fold-margin-color-hi";
 static std::string kAttrFoldDisplayTextStyle = "fold-display-text-style";
 static std::string kAttrDefaultFoldDisplayText = "default-fold-display-text";
 static std::string kAttrUseTabs = "use-tabs";
@@ -705,8 +705,8 @@ public:
 		attributeNames.push_back (kAttrLineWrapStartIndent);
 		// folding
 		attributeNames.push_back (kAttrShowFolding);
-		attributeNames.push_back (kAttrFoldMarginBackgroundColor);
-		attributeNames.push_back (kAttrFoldMarginForegroundColor);
+		attributeNames.push_back (kAttrFoldMarginColor);
+		attributeNames.push_back (kAttrFoldMarginColorHi);
 		attributeNames.push_back (kAttrFoldDisplayTextStyle);
 		attributeNames.push_back (kAttrDefaultFoldDisplayText);
 		// line-number
@@ -750,9 +750,9 @@ public:
 			return kBooleanType;
 		if (attributeName == kAttrShowFolding)
 			return kBooleanType;
-		if (attributeName == kAttrFoldMarginBackgroundColor)
+		if (attributeName == kAttrFoldMarginColor)
 			return kColorType;
-		if (attributeName == kAttrFoldMarginForegroundColor)
+		if (attributeName == kAttrFoldMarginColorHi)
 			return kColorType;
 		if (attributeName == kAttrFoldDisplayTextStyle)
 			return kListType;
@@ -834,13 +834,13 @@ public:
 		{
 			sev->setFoldingVisible (b);
 		}
-		if (stringToColor (attr.getAttributeValue (kAttrFoldMarginBackgroundColor), color, desc))
+		if (stringToColor (attr.getAttributeValue (kAttrFoldMarginColor), color, desc))
 		{
-			sev->setFoldMarginBackgroundColor (color);
+			sev->setFoldMarginColor (color);
 		}
-		if (stringToColor (attr.getAttributeValue (kAttrFoldMarginForegroundColor), color, desc))
+		if (stringToColor (attr.getAttributeValue (kAttrFoldMarginColorHi), color, desc))
 		{
-			sev->setFoldMarginForegroundColor (color);
+			sev->setFoldMarginColorHi (color);
 		}
 		if (auto style = attr.getAttributeValue (kAttrFoldDisplayTextStyle))
 		{
@@ -988,14 +988,14 @@ public:
 			stringValue = sev->getFoldingVisible () ? "true" : "false";
 			return true;
 		}
-		if (attName == kAttrFoldMarginBackgroundColor)
+		if (attName == kAttrFoldMarginColor)
 		{
-			auto color = sev->getFoldMarginBackgroundColor ();
+			auto color = sev->getFoldMarginColor ();
 			return colorToString (color, stringValue, desc);
 		}
-		if (attName == kAttrFoldMarginForegroundColor)
+		if (attName == kAttrFoldMarginColorHi)
 		{
-			auto color = sev->getFoldMarginForegroundColor ();
+			auto color = sev->getFoldMarginColorHi ();
 			return colorToString (color, stringValue, desc);
 		}
 		if (attName == kAttrFoldDisplayTextStyle)
