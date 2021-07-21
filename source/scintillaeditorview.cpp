@@ -499,6 +499,38 @@ bool ScintillaEditorView::getFoldingVisible () const
 }
 
 //------------------------------------------------------------------------
+void ScintillaEditorView::setDefaultFoldDisplayText (UTF8StringPtr text)
+{
+	sendMessage (Message::SetDefaultFoldDisplayText, 0, text);
+}
+
+//------------------------------------------------------------------------
+UTF8String ScintillaEditorView::getDefaultFoldDisplayText () const
+{
+	std::string str;
+	auto length = sendMessage (Message::GetDefaultFoldDisplayText);
+	if (length > 0)
+	{
+		str.resize (length);
+		sendMessage (Message::GetDefaultFoldDisplayText, length + 1, str.data ());
+	}
+	return UTF8String (std::move (str));
+}
+
+//------------------------------------------------------------------------
+void ScintillaEditorView::setFoldDisplayTextStyle (Scintilla::FoldDisplayTextStyle style)
+{
+	sendMessage (Scintilla::Message::FoldDisplayTextSetStyle, style);
+}
+
+//------------------------------------------------------------------------
+Scintilla::FoldDisplayTextStyle ScintillaEditorView::getFoldDisplayTextStyle () const
+{
+	return static_cast<Scintilla::FoldDisplayTextStyle> (
+	    sendMessage (Scintilla::Message::FoldDisplayTextGetStyle));
+}
+
+//------------------------------------------------------------------------
 void ScintillaEditorView::updateMarginsColumns ()
 {
 	auto lineNumbers = (marginsCol & (1 << MarginsCol::LineNumber));
@@ -578,6 +610,8 @@ static std::string kAttrInactiveSelectionBackgroundColor = "selection-inactive-b
 static std::string kAttrInactiveSelectionForegroundColor = "selection-inactive-foreground-color";
 static std::string kAttrShowLineNumbers = "show-line-numbers";
 static std::string kAttrShowFolding = "show-folding";
+static std::string kAttrFoldDisplayTextStyle = "fold-display-text-style";
+static std::string kAttrDefaultFoldDisplayText = "default-fold-display-text";
 static std::string kAttrUseTabs = "use-tabs";
 static std::string kAttrTabWidth = "tab-width";
 static std::string kAttrLineWrapMode = "line-wrap-mode";
@@ -620,6 +654,8 @@ public:
 		attributeNames.push_back (kAttrLineWrapStartIndent);
 		// folding
 		attributeNames.push_back (kAttrShowFolding);
+		attributeNames.push_back (kAttrFoldDisplayTextStyle);
+		attributeNames.push_back (kAttrDefaultFoldDisplayText);
 		// line-number
 		attributeNames.push_back (kAttrShowLineNumbers);
 		attributeNames.push_back (kAttrLineNumberFontColor);
@@ -661,6 +697,10 @@ public:
 			return kBooleanType;
 		if (attributeName == kAttrShowFolding)
 			return kBooleanType;
+		if (attributeName == kAttrFoldDisplayTextStyle)
+			return kListType;
+		if (attributeName == kAttrDefaultFoldDisplayText)
+			return kStringType;
 		if (attributeName == kAttrShowLineNumbers)
 			return kBooleanType;
 		if (attributeName == kAttrLineNumberFontColor)
@@ -736,6 +776,22 @@ public:
 		if (attr.getBooleanAttribute (kAttrShowFolding, b))
 		{
 			sev->setFoldingVisible (b);
+		}
+		if (auto style = attr.getAttributeValue (kAttrFoldDisplayTextStyle))
+		{
+			for (auto index = 0; index < getFoldDisplayTextStyles ().size (); ++index)
+			{
+				if (*style == getFoldDisplayTextStyles ()[index])
+				{
+					sev->setFoldDisplayTextStyle (
+					    static_cast<Scintilla::FoldDisplayTextStyle> (index));
+					break;
+				}
+			}
+		}
+		if (auto str = attr.getAttributeValue (kAttrDefaultFoldDisplayText))
+		{
+			sev->setDefaultFoldDisplayText (str->data ());
 		}
 		int32_t i;
 		if (attr.getIntegerAttribute (kAttrTabWidth, i))
@@ -867,6 +923,17 @@ public:
 			stringValue = sev->getFoldingVisible () ? "true" : "false";
 			return true;
 		}
+		if (attName == kAttrFoldDisplayTextStyle)
+		{
+			auto index = static_cast<size_t> (sev->getFoldDisplayTextStyle ());
+			stringValue = getFoldDisplayTextStyles ()[index];
+			return true;
+		}
+		if (attName == kAttrDefaultFoldDisplayText)
+		{
+			stringValue = sev->getDefaultFoldDisplayText ();
+			return true;
+		}
 		if (attName == kAttrShowLineNumbers)
 		{
 			stringValue = sev->getLineNumbersVisible () ? "true" : "false";
@@ -931,6 +998,12 @@ public:
 		static LineWrapIndentModes modes = {"Fixed", "Same", "Indent", "Deep Indent"};
 		return modes;
 	}
+	using FoldDisplayTextStyles = std::array<string, 3>;
+	static FoldDisplayTextStyles& getFoldDisplayTextStyles ()
+	{
+		static FoldDisplayTextStyles styles = {"None", "Standard", "Boxed"};
+		return styles;
+	}
 	bool getPossibleListValues (const string& attributeName,
 	                            ConstStringPtrList& values) const override
 	{
@@ -943,6 +1016,12 @@ public:
 		if (attributeName == kAttrLineWrapIndentMode)
 		{
 			for (auto& m : getLineWrapIndentModes ())
+				values.emplace_back (&m);
+			return true;
+		}
+		if (attributeName == kAttrFoldDisplayTextStyle)
+		{
+			for (auto& m : getFoldDisplayTextStyles ())
 				values.emplace_back (&m);
 			return true;
 		}

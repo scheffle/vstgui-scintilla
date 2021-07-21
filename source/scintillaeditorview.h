@@ -17,6 +17,7 @@ class ILexer5;
 enum class Wrap;
 enum class WrapIndentMode;
 enum class WrapVisualFlag;
+enum class FoldDisplayTextStyle;
 };
 
 //------------------------------------------------------------------------
@@ -128,6 +129,10 @@ public:
 	// Folding
 	void setFoldingVisible (bool state);
 	bool getFoldingVisible () const;
+	void setDefaultFoldDisplayText (UTF8StringPtr text);
+	UTF8String getDefaultFoldDisplayText () const;
+	void setFoldDisplayTextStyle (Scintilla::FoldDisplayTextStyle style);
+	Scintilla::FoldDisplayTextStyle getFoldDisplayTextStyle () const;
 
 #if 0 // not possible with scintilla 5.1
 	void setFoldingForegroundColor (const CColor& color);

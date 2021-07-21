@@ -51,23 +51,23 @@ public:
 				lexer->PropertySet ("fold", "1");
 				lexer->PropertySet ("fold.comment", "1");
 				editor->setLexer (lexer);
-			}
 
-			CColor commentColor;
-			auto fontColor = editor->getStaticFontColor ();
-			auto backgroundColor = editor->getBackgroundColor ();
-			if (backgroundColor.getLightness () > fontColor.getLightness ())
-				commentColor = backgroundColor;
-			else
-				commentColor = fontColor;
-			double h, s, l;
-			commentColor.toHSL (h, s, l);
-			l *= 0.5;
-			commentColor.fromHSL (h, s, l);
-			editor->setStyleColor (SCE_C_COMMENT, commentColor);
-			editor->setStyleColor (SCE_C_COMMENTLINE, commentColor);
-			editor->setStyleColor (SCE_C_COMMENTDOC, commentColor);
-			editor->setStyleFontWeight (SCE_C_WORD, 900);
+				CColor commentColor;
+				auto fontColor = editor->getStaticFontColor ();
+				auto backgroundColor = editor->getBackgroundColor ();
+				if (backgroundColor.getLightness () > fontColor.getLightness ())
+					commentColor = backgroundColor;
+				else
+					commentColor = fontColor;
+				double h, s, l;
+				commentColor.toHSL (h, s, l);
+				l *= 0.5;
+				commentColor.fromHSL (h, s, l);
+				editor->setStyleColor (SCE_C_COMMENT, commentColor);
+				editor->setStyleColor (SCE_C_COMMENTLINE, commentColor);
+				editor->setStyleColor (SCE_C_COMMENTDOC, commentColor);
+				editor->setStyleFontWeight (SCE_C_WORD, 900);
+			}
 
 			Preferences prefs;
 			if (auto value = prefs.get ("EditorText"))
