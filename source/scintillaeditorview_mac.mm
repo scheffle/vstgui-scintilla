@@ -23,11 +23,13 @@ namespace VSTGUI {
 namespace {
 
 //------------------------------------------------------------------------
-void releaseObject (NSObject* obj)
+template <typename T>
+void releaseObject (T& obj)
 {
 #if !__has_feature(objc_arc)
 	[obj release];
 #endif
+	obj = nullptr;
 }
 
 //------------------------------------------------------------------------
@@ -55,10 +57,14 @@ ScintillaEditorView::ScintillaEditorView () : CView (CRect (0, 0, 0, 0))
 //------------------------------------------------------------------------
 ScintillaEditorView::~ScintillaEditorView () noexcept
 {
-	if (impl->view)
-		impl->view.delegate = nil;
-	releaseObject (impl->view);
-	releaseObject (impl->delegate);
+	@autoreleasepool
+	{
+		if (impl->view)
+			impl->view.delegate = nil;
+		impl->delegate.impl = nullptr;
+		releaseObject (impl->view);
+		releaseObject (impl->delegate);
+	}
 }
 
 //------------------------------------------------------------------------
