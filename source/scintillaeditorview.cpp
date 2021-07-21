@@ -558,10 +558,38 @@ CColor ScintillaEditorView::getFoldMarginColor () const
 }
 
 //------------------------------------------------------------------------
+bool ScintillaEditorView::showLineNumberMargin () const
+{
+	return (marginsCol & (1 << MarginsCol::LineNumber));
+}
+
+//------------------------------------------------------------------------
+bool ScintillaEditorView::showFoldMargin () const
+{
+	return (marginsCol & (1 << MarginsCol::Folding));
+}
+
+//------------------------------------------------------------------------
+void ScintillaEditorView::updateLineNumberMarginWidth ()
+{
+	if (showLineNumberMargin ())
+	{
+		auto lineCount = static_cast<uint32_t> (sendMessage (Message::GetLineCount));
+		std::string str = "_99";
+		while ((lineCount /= 10) >= 10)
+		{
+			str += "9";
+		}
+		auto width = sendMessage (Message::TextWidth, StylesCommon::LineNumber, str.data ());
+		sendMessage (Message::SetMarginWidthN, 0, width);
+	}
+}
+
+//------------------------------------------------------------------------
 void ScintillaEditorView::updateMarginsColumns ()
 {
-	auto lineNumbers = (marginsCol & (1 << MarginsCol::LineNumber));
-	auto folding = (marginsCol & (1 << MarginsCol::Folding));
+	auto lineNumbers = showLineNumberMargin ();
+	auto folding = showFoldMargin ();
 
 	auto count = 0;
 	if (lineNumbers)
@@ -574,8 +602,7 @@ void ScintillaEditorView::updateMarginsColumns ()
 	if (lineNumbers)
 	{
 		sendMessage (Message::SetMarginTypeN, column, Scintilla::MarginType::Number);
-		auto width = sendMessage (Message::TextWidth, StylesCommon::LineNumber, "_99999");
-		sendMessage (Message::SetMarginWidthN, column, width);
+		updateLineNumberMarginWidth ();
 		++column;
 	}
 	if (folding)
@@ -614,6 +641,12 @@ void ScintillaEditorView::onScintillaNotification (SCNotification* notification)
 	assert (notification);
 	switch (static_cast<Notification> (notification->nmhdr.code))
 	{
+		case Notification::Modified:
+		{
+			if (notification->linesAdded != 0)
+				updateLineNumberMarginWidth ();
+			break;
+		}
 		case Notification::FocusIn:
 		{
 			if (auto frame = getFrame ())

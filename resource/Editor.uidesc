@@ -12,11 +12,11 @@
 			"EditorBackground": "#212121ff",
 			"WindowBackground": "#4f4f4fff",
 			"focus": "#3f87a9ff",
-			"fold.margin": "#454545ff",
-			"fold.margin.hi": "#0e0e0eff",
+			"fold.margin": "#272727ff",
+			"fold.margin.hi": "#272727ff",
 			"font": "#e7e7e7ff",
-			"linenumber.background": "#353535ff",
-			"linenumber.font": "#b4b4b4ff",
+			"linenumber.background": "#000000ff",
+			"linenumber.font": "#626262ff",
 			"selection.background": "#0e53ffa0",
 			"selection.foreground": "#e6e6e6ff",
 			"selection.inactive.background": "#5b5b5b84"
@@ -51,7 +51,7 @@
 				"SelectedRow": "2"
 			},
 			"UIColorsDataSource": {
-				"SelectedRow": "2"
+				"SelectedRow": "6"
 			},
 			"UIFontsDataSource": {
 				"SelectedRow": "0"
@@ -210,10 +210,10 @@
 							"editor-font": "EditorFont",
 							"editor-margin": "6, 6",
 							"fold-display-text-style": "Standard",
-							"fold-margin-background-color": "fold.margin",
-							"fold-margin-foreground-color": "fold.margin.hi",
+							"fold-margin-color": "fold.margin",
+							"fold-margin-color-hi": "fold.margin.hi",
 							"font-color": "font",
-							"line-number-background-color": "EditorBackground",
+							"line-number-background-color": "linenumber.background",
 							"line-number-font-color": "linenumber.font",
 							"line-wrap-indent-mode": "Deep Indent",
 							"line-wrap-mode": "Word",

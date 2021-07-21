@@ -200,7 +200,11 @@ private:
 	void onScintillaNotification (SCNotification* notification) override;
 	void draw (CDrawContext* pContext) override;
 	void platformSetBackgroundColor (const CColor& color);
+	bool showLineNumberMargin () const;
+	bool showFoldMargin () const;
+	
 	void updateMarginsColumns ();
+	void updateLineNumberMarginWidth ();
 
 	SharedPointer<CFontDesc> font;
 	Scintilla::ILexer5* lexer {nullptr};
