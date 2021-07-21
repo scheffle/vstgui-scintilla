@@ -6,6 +6,7 @@
 //
 
 #include "scintillaeditorview.h"
+#include "vstgui/lib/cframe.h"
 #include "vstgui/lib/platform/iplatformfont.h"
 #include "vstgui/uidescription/detail/uiviewcreatorattributes.h"
 #include "vstgui/uidescription/iviewcreator.h"
@@ -531,6 +532,32 @@ Scintilla::FoldDisplayTextStyle ScintillaEditorView::getFoldDisplayTextStyle () 
 }
 
 //------------------------------------------------------------------------
+void ScintillaEditorView::setFoldMarginForegroundColor (const CColor& color)
+{
+	foldMarginForegroundColor = color;
+	sendMessage (Message::SetFoldMarginHiColour, true, toScintillaColor (color));
+}
+
+//------------------------------------------------------------------------
+CColor ScintillaEditorView::getFoldMarginForegroundColor () const
+{
+	return foldMarginForegroundColor;
+}
+
+//------------------------------------------------------------------------
+void ScintillaEditorView::setFoldMarginBackgroundColor (const CColor& color)
+{
+	foldMarginBackgroundColor = color;
+	sendMessage (Message::SetFoldMarginColour, true, toScintillaColor (color));
+}
+
+//------------------------------------------------------------------------
+CColor ScintillaEditorView::getFoldMarginBackgroundColor () const
+{
+	return foldMarginBackgroundColor;
+}
+
+//------------------------------------------------------------------------
 void ScintillaEditorView::updateMarginsColumns ()
 {
 	auto lineNumbers = (marginsCol & (1 << MarginsCol::LineNumber));
@@ -587,6 +614,28 @@ void ScintillaEditorView::onScintillaNotification (SCNotification* notification)
 	assert (notification);
 	switch (static_cast<Notification> (notification->nmhdr.code))
 	{
+		case Notification::FocusIn:
+		{
+			if (auto frame = getFrame ())
+			{
+				if (frame->getFocusView () != this)
+				{
+					frame->setFocusView (this);
+				}
+			}
+			break;
+		}
+		case Notification::FocusOut:
+		{
+			if (auto frame = getFrame ())
+			{
+				if (frame->getFocusView () == this)
+				{
+					frame->setFocusView (nullptr);
+				}
+			}
+			break;
+		}
 		default: break;
 	}
 }
@@ -610,6 +659,8 @@ static std::string kAttrInactiveSelectionBackgroundColor = "selection-inactive-b
 static std::string kAttrInactiveSelectionForegroundColor = "selection-inactive-foreground-color";
 static std::string kAttrShowLineNumbers = "show-line-numbers";
 static std::string kAttrShowFolding = "show-folding";
+static std::string kAttrFoldMarginBackgroundColor = "fold-margin-background-color";
+static std::string kAttrFoldMarginForegroundColor = "fold-margin-foreground-color";
 static std::string kAttrFoldDisplayTextStyle = "fold-display-text-style";
 static std::string kAttrDefaultFoldDisplayText = "default-fold-display-text";
 static std::string kAttrUseTabs = "use-tabs";
@@ -654,6 +705,8 @@ public:
 		attributeNames.push_back (kAttrLineWrapStartIndent);
 		// folding
 		attributeNames.push_back (kAttrShowFolding);
+		attributeNames.push_back (kAttrFoldMarginBackgroundColor);
+		attributeNames.push_back (kAttrFoldMarginForegroundColor);
 		attributeNames.push_back (kAttrFoldDisplayTextStyle);
 		attributeNames.push_back (kAttrDefaultFoldDisplayText);
 		// line-number
@@ -697,6 +750,10 @@ public:
 			return kBooleanType;
 		if (attributeName == kAttrShowFolding)
 			return kBooleanType;
+		if (attributeName == kAttrFoldMarginBackgroundColor)
+			return kColorType;
+		if (attributeName == kAttrFoldMarginForegroundColor)
+			return kColorType;
 		if (attributeName == kAttrFoldDisplayTextStyle)
 			return kListType;
 		if (attributeName == kAttrDefaultFoldDisplayText)
@@ -776,6 +833,14 @@ public:
 		if (attr.getBooleanAttribute (kAttrShowFolding, b))
 		{
 			sev->setFoldingVisible (b);
+		}
+		if (stringToColor (attr.getAttributeValue (kAttrFoldMarginBackgroundColor), color, desc))
+		{
+			sev->setFoldMarginBackgroundColor (color);
+		}
+		if (stringToColor (attr.getAttributeValue (kAttrFoldMarginForegroundColor), color, desc))
+		{
+			sev->setFoldMarginForegroundColor (color);
 		}
 		if (auto style = attr.getAttributeValue (kAttrFoldDisplayTextStyle))
 		{
@@ -922,6 +987,16 @@ public:
 		{
 			stringValue = sev->getFoldingVisible () ? "true" : "false";
 			return true;
+		}
+		if (attName == kAttrFoldMarginBackgroundColor)
+		{
+			auto color = sev->getFoldMarginBackgroundColor ();
+			return colorToString (color, stringValue, desc);
+		}
+		if (attName == kAttrFoldMarginForegroundColor)
+		{
+			auto color = sev->getFoldMarginForegroundColor ();
+			return colorToString (color, stringValue, desc);
 		}
 		if (attName == kAttrFoldDisplayTextStyle)
 		{

@@ -11,6 +11,9 @@
 		"colors": {
 			"EditorBackground": "#212121ff",
 			"WindowBackground": "#4f4f4fff",
+			"focus": "#3f87a9ff",
+			"fold.margin": "#454545ff",
+			"fold.margin.hi": "#0e0e0eff",
 			"font": "#e7e7e7ff",
 			"linenumber.background": "#353535ff",
 			"linenumber.font": "#b4b4b4ff",
@@ -33,14 +36,14 @@
 			},
 			"UIEditController": {
 				"EditViewScale": "1",
-				"EditorSize": "0, 0, 1045, 844",
-				"SplitViewSize_0_0": "0.6955990220048899885796345188282430171967",
-				"SplitViewSize_0_1": "0.2799511002444987628479111663182266056538",
-				"SplitViewSize_1_0": "0.4914425427872860518974107435496989637613",
-				"SplitViewSize_1_1": "0.5036674816625916761836379009764641523361",
-				"SplitViewSize_2_0": "0.6803827751196172002323692140635102987289",
-				"SplitViewSize_2_1": "0.3148325358851674637961082225956488400698",
-				"TabSwitchValue": "6",
+				"EditorSize": "0, 0, 1111, 806",
+				"SplitViewSize_0_0": "0.6807692307692307931432651457726024091244",
+				"SplitViewSize_0_1": "0.2935897435897436014151651306747226044536",
+				"SplitViewSize_1_0": "0.4910256410256410020132022964389761909842",
+				"SplitViewSize_1_1": "0.5038461538461538324895627738442271947861",
+				"SplitViewSize_2_0": "0.6993699369936993148755277616146486252546",
+				"SplitViewSize_2_1": "0.2961296129612961403054782749677542597055",
+				"TabSwitchValue": "2",
 				"Version": "1"
 			},
 			"UIAttributesController": {},
@@ -48,13 +51,18 @@
 				"SelectedRow": "2"
 			},
 			"UIColorsDataSource": {
-				"SelectedRow": "5"
+				"SelectedRow": "2"
 			},
 			"UIFontsDataSource": {
 				"SelectedRow": "0"
 			},
 			"UIGradientsDataSource": {
 				"SelectedRow": "-1"
+			},
+			"FocusDrawing": {
+				"color": "focus",
+				"enabled": "true",
+				"width": "1.5"
 			}
 		},
 		"templates": {
@@ -73,40 +81,6 @@
 					"wants-focus": "false"
 				},
 				"children": {
-					"ScintillaEditorView": {
-						"attributes": {
-							"autosize": "left right top bottom ",
-							"background-color": "EditorBackground",
-							"class": "ScintillaEditorView",
-							"default-fold-display-text": "...",
-							"editor-font": "EditorFont",
-							"editor-margin": "6, 6",
-							"fold-display-text-style": "Standard",
-							"font-color": "font",
-							"line-number-background-color": "linenumber.background",
-							"line-number-font-color": "linenumber.font",
-							"line-wrap-indent-mode": "Deep Indent",
-							"line-wrap-mode": "Word",
-							"line-wrap-start-indent": "0",
-							"line-wrap-visual-end": "true",
-							"line-wrap-visual-margin": "false",
-							"line-wrap-visual-start": "false",
-							"mouse-enabled": "true",
-							"opacity": "1",
-							"origin": "20, 50",
-							"selection-background-color": "selection.background",
-							"selection-foreground-color": "selection.foreground",
-							"selection-inactive-background-color": "selection.inactive.background",
-							"selection-inactive-foreground-color": "selection.foreground",
-							"show-folding": "true",
-							"show-line-numbers": "true",
-							"size": "610, 400",
-							"tab-width": "4",
-							"transparent": "false",
-							"use-tabs": "true",
-							"wants-focus": "true"
-						}
-					},
 					"CSearchTextEdit": {
 						"attributes": {
 							"autosize": "right top ",
@@ -225,6 +199,42 @@
 							"transparent": "false",
 							"wants-focus": "true",
 							"wheel-inc-value": "0.1"
+						}
+					},
+					"ScintillaEditorView": {
+						"attributes": {
+							"autosize": "left right top bottom ",
+							"background-color": "EditorBackground",
+							"class": "ScintillaEditorView",
+							"default-fold-display-text": "...",
+							"editor-font": "EditorFont",
+							"editor-margin": "6, 6",
+							"fold-display-text-style": "Standard",
+							"fold-margin-background-color": "fold.margin",
+							"fold-margin-foreground-color": "fold.margin.hi",
+							"font-color": "font",
+							"line-number-background-color": "EditorBackground",
+							"line-number-font-color": "linenumber.font",
+							"line-wrap-indent-mode": "Deep Indent",
+							"line-wrap-mode": "Word",
+							"line-wrap-start-indent": "0",
+							"line-wrap-visual-end": "true",
+							"line-wrap-visual-margin": "false",
+							"line-wrap-visual-start": "false",
+							"mouse-enabled": "true",
+							"opacity": "1",
+							"origin": "20, 50",
+							"selection-background-color": "selection.background",
+							"selection-foreground-color": "selection.foreground",
+							"selection-inactive-background-color": "selection.inactive.background",
+							"selection-inactive-foreground-color": "selection.foreground",
+							"show-folding": "true",
+							"show-line-numbers": "true",
+							"size": "610, 400",
+							"tab-width": "4",
+							"transparent": "false",
+							"use-tabs": "true",
+							"wants-focus": "true"
 						}
 					}
 				}

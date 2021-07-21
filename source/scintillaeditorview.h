@@ -134,12 +134,10 @@ public:
 	void setFoldDisplayTextStyle (Scintilla::FoldDisplayTextStyle style);
 	Scintilla::FoldDisplayTextStyle getFoldDisplayTextStyle () const;
 
-#if 0 // not possible with scintilla 5.1
-	void setFoldingForegroundColor (const CColor& color);
-	CColor getFoldingForegroundColor () const;
-	void setFoldingBackgroundColor (const CColor& color);
-	CColor getFoldingBackgroundColor () const;
-#endif
+	void setFoldMarginForegroundColor (const CColor& color);
+	CColor getFoldMarginForegroundColor () const;
+	void setFoldMarginBackgroundColor (const CColor& color);
+	CColor getFoldMarginBackgroundColor () const;
 
 	// ------------------------------------
 	// Line Wrap
@@ -214,6 +212,9 @@ private:
 	};
 
 	uint32_t marginsCol {0};
+	CColor foldMarginForegroundColor {kBlackCColor};
+	CColor foldMarginBackgroundColor {kWhiteCColor};
+
 	std::unique_ptr<Impl> impl;
 };
 
