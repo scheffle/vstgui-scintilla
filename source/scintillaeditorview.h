@@ -36,6 +36,12 @@ public:
 class ScintillaEditorView : public CView, public IScintillaListener
 {
 public:
+	struct Range
+	{
+		int64_t start;
+		int64_t end;
+	};
+
 	ScintillaEditorView ();
 	~ScintillaEditorView () noexcept;
 
@@ -43,6 +49,8 @@ public:
 	void setText (UTF8StringPtr text);
 	/** get current text */
 	UTF8String getText () const;
+	/** get part of the text  */
+	UTF8String getText (const Range& range);
 
 	/** set font for all styles.
 	 *	@param font font
@@ -64,14 +72,8 @@ public:
 
 	// ------------------------------------
 	// Selection
-	struct Selection
-	{
-		int64_t start;
-		int64_t end;
-	};
-
-	Selection getSelection () const;
-	void setSelection (Selection selection);
+	Range getSelection () const;
+	void setSelection (Range selection);
 	bool replaceSelection (UTF8StringPtr string);
 
 	void setSelectionBackgroundColor (const CColor& color);

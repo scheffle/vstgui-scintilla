@@ -3,11 +3,13 @@
 // distribution and at http://github.com/steinbergmedia/vstgui/LICENSE
 
 #include "scintillaeditorview.h"
+#include "vstgui/lib/cframe.h"
 #include "vstgui/lib/controls/csearchtextedit.h"
 #include "vstgui/lib/iviewlistener.h"
 #include "vstgui/standalone/include/helpers/appdelegate.h"
 #include "vstgui/standalone/include/helpers/preferences.h"
 #include "vstgui/standalone/include/helpers/uidesc/customization.h"
+#include "vstgui/standalone/include/helpers/value.h"
 #include "vstgui/standalone/include/helpers/windowlistener.h"
 #include "vstgui/standalone/include/iapplication.h"
 #include "vstgui/standalone/include/iuidescwindow.h"
@@ -24,11 +26,58 @@ using namespace VSTGUI;
 using namespace VSTGUI::Standalone;
 using namespace VSTGUI::Standalone::Application;
 
+static Command FindCommand = {CommandGroup::Edit, "Find..."};
 static Command FindNextCommand = {CommandGroup::Edit, "Find Next"};
 static Command FindPreviousCommand = {CommandGroup::Edit, "Find Previous"};
-static Command ZoomInCommand = {CommandGroup::Edit, "Zoom In"};
-static Command ZoomOutCommand = {CommandGroup::Edit, "Zoom Out"};
-static Command ResetZoomCommand = {CommandGroup::Edit, "Reset Zoom"};
+static Command UseSelectionForFindCommand = {CommandGroup::Edit, "Use Selection For Find"};
+static Command ZoomInCommand = {"Zoom", "Zoom In"};
+static Command ZoomOutCommand = {"Zoom", "Zoom Out"};
+static Command ResetZoomCommand = {"Zoom", "Reset Zoom"};
+
+//------------------------------------------------------------------------
+class SearchModel : public UIDesc::IModelBinding
+{
+public:
+	static std::shared_ptr<SearchModel>& instance ()
+	{
+		static auto model = std::make_shared<SearchModel> ();
+		return model;
+	}
+
+	static constexpr auto WholeWordID = "WholeWord";
+	static constexpr auto MatchCaseID = "MatchCase";
+	static constexpr auto WordStartID = "WordStart";
+
+	SearchModel ()
+	{
+		values.emplace_back (Value::makeStepValue (WholeWordID, 2));
+		values.emplace_back (Value::makeStepValue (MatchCaseID, 2));
+		values.emplace_back (Value::makeStepValue (WordStartID, 2));
+	}
+
+	bool matchCase () const { return getStepValue (MatchCaseID) != 0; }
+	bool wholeWord () const { return getStepValue (WholeWordID) != 0; }
+	bool wordStart () const { return getStepValue (WordStartID) != 0; }
+
+private:
+	uint32_t getStepValue (IdStringPtr valueID) const
+	{
+		auto it = std::find_if (values.begin (), values.end (),
+		                        [&] (const auto& other) { return other->getID () == valueID; });
+		if (it != values.end ())
+		{
+			if (auto stepValue = (*it)->dynamicCast<IStepValue> ())
+			{
+				return stepValue->valueToStep ((*it)->getValue ());
+			}
+		}
+		return 0;
+	}
+
+	const ValueList& getValues () const override { return values; }
+
+	ValueList values;
+};
 
 //------------------------------------------------------------------------
 class EditorController : public DelegationController,
@@ -116,6 +165,13 @@ public:
 			return editor->canRedo ();
 		if (command == ZoomInCommand || command == ZoomOutCommand || command == ResetZoomCommand)
 			return true;
+		if (command == FindCommand)
+			return true;
+		if (command == UseSelectionForFindCommand)
+		{
+			auto selection = editor->getSelection ();
+			return selection.end != selection.start;
+		}
 		return false;
 	}
 	bool handleCommand (const Command& command) override
@@ -157,6 +213,18 @@ public:
 			editor->setZoom (0);
 			return true;
 		}
+		if (command == FindCommand)
+		{
+			searchField->takeFocus ();
+			return true;
+		}
+		if (command == UseSelectionForFindCommand)
+		{
+			auto selection = editor->getSelection ();
+			auto text = editor->getText (selection);
+			searchField->setText (text);
+			return true;
+		}
 		return false;
 	}
 
@@ -165,7 +233,15 @@ public:
 		uint32_t flags = ScintillaEditorView::ScrollTo | ScintillaEditorView::Wrap;
 		if (!next)
 			flags |= ScintillaEditorView::Backwards;
+		const auto& searchModel = SearchModel::instance ();
+		if (searchModel->matchCase ())
+			flags |= ScintillaEditorView::MatchCase;
+		if (searchModel->wordStart ())
+			flags |= ScintillaEditorView::WordStart;
+		if (searchModel->wholeWord ())
+			flags |= ScintillaEditorView::WholeWord;
 		const auto& text = searchField->getText ();
+		editor->takeFocus ();
 		editor->findAndSelect (text.data (), flags);
 	}
 
@@ -197,6 +273,7 @@ public:
 		config.windowConfig.autoSaveFrameName = "EditorWindow";
 		config.windowConfig.style.border ().close ().size ().centered ();
 		config.customization = customization;
+		config.modelBinding = SearchModel::instance ();
 		if (auto window = UIDesc::makeWindow (config))
 		{
 			window->show ();
@@ -207,8 +284,10 @@ public:
 			IApplication::instance ().quit ();
 		}
 		auto& app = IApplication::instance ();
+		app.registerCommand (FindCommand, 'f');
 		app.registerCommand (FindNextCommand, 'g');
 		app.registerCommand (FindPreviousCommand, 'G');
+		app.registerCommand (UseSelectionForFindCommand, 'e');
 		app.registerCommand (ZoomInCommand, '=');
 		app.registerCommand (ZoomOutCommand, '-');
 		app.registerCommand (ResetZoomCommand, '0');

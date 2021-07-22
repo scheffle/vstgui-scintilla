@@ -270,16 +270,31 @@ UTF8String ScintillaEditorView::getText () const
 }
 
 //------------------------------------------------------------------------
-auto ScintillaEditorView::getSelection () const -> Selection
+UTF8String ScintillaEditorView::getText (const Range& range)
 {
-	Selection selection {};
+	if (range.start >= range.end)
+		return {};
+	std::string str;
+	str.resize ((range.end - range.start) );
+	Sci_TextRange textRange;
+	textRange.chrg.cpMin = range.start;
+	textRange.chrg.cpMax = range.end;
+	textRange.lpstrText = str.data ();
+	sendMessage (Message::GetTextRange, 0, &textRange);
+	return UTF8String (std::move (str));
+}
+
+//------------------------------------------------------------------------
+auto ScintillaEditorView::getSelection () const -> Range
+{
+	Range selection {};
 	selection.start = sendMessage (Message::GetSelectionStart);
 	selection.end = sendMessage (Message::GetSelectionEnd);
 	return selection;
 }
 
 //------------------------------------------------------------------------
-void ScintillaEditorView::setSelection (Selection selection)
+void ScintillaEditorView::setSelection (Range selection)
 {
 	sendMessage (Message::SetSelectionStart, selection.start);
 	sendMessage (Message::SetSelectionEnd, selection.end);

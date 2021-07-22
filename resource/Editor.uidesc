@@ -22,7 +22,11 @@
 			"selection.inactive.background": "#5b5b5b84"
 		},
 		"gradients": {},
-		"control-tags": {},
+		"control-tags": {
+			"MatchCase": "1",
+			"WholeWord": "0",
+			"WordStart": "2"
+		},
 		"custom": {
 			"UIDescFilePath": {
 				"path": "/Users/scheffle/Source/vstgui-scintilla/resource/Editor.uidesc"
@@ -131,6 +135,7 @@
 							"boxframe-color": "~ BlackCColor",
 							"checkmark-color": "~ BlackCColor",
 							"class": "CCheckBox",
+							"control-tag": "MatchCase",
 							"default-value": "0.5",
 							"draw-crossbox": "true",
 							"font": "~ NormalFontVerySmall",
@@ -157,6 +162,7 @@
 							"boxframe-color": "~ BlackCColor",
 							"checkmark-color": "~ BlackCColor",
 							"class": "CCheckBox",
+							"control-tag": "WholeWord",
 							"default-value": "0.5",
 							"draw-crossbox": "true",
 							"font": "~ NormalFontVerySmall",
@@ -183,6 +189,7 @@
 							"boxframe-color": "~ BlackCColor",
 							"checkmark-color": "~ BlackCColor",
 							"class": "CCheckBox",
+							"control-tag": "WordStart",
 							"default-value": "0.5",
 							"draw-crossbox": "true",
 							"font": "~ NormalFontVerySmall",
