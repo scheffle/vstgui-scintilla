@@ -6,19 +6,19 @@
 #include "vstgui/lib/controls/csearchtextedit.h"
 #include "vstgui/lib/iviewlistener.h"
 #include "vstgui/standalone/include/helpers/appdelegate.h"
-#include "vstgui/standalone/include/helpers/uidesc/customization.h"
 #include "vstgui/standalone/include/helpers/preferences.h"
+#include "vstgui/standalone/include/helpers/uidesc/customization.h"
 #include "vstgui/standalone/include/helpers/windowlistener.h"
 #include "vstgui/standalone/include/iapplication.h"
 #include "vstgui/standalone/include/iuidescwindow.h"
 #include "vstgui/uidescription/delegationcontroller.h"
 
-#include "Scintilla.h"
-#include "SciLexer.h"
 #include "ILexer.h"
-#include "ScintillaMessages.h"
 #include "Lexilla.h"
 #include "LexillaAccess.h"
+#include "SciLexer.h"
+#include "Scintilla.h"
+#include "ScintillaMessages.h"
 
 using namespace VSTGUI;
 using namespace VSTGUI::Standalone;
@@ -26,6 +26,9 @@ using namespace VSTGUI::Standalone::Application;
 
 static Command FindNextCommand = {CommandGroup::Edit, "Find Next"};
 static Command FindPreviousCommand = {CommandGroup::Edit, "Find Previous"};
+static Command ZoomInCommand = {CommandGroup::Edit, "Zoom In"};
+static Command ZoomOutCommand = {CommandGroup::Edit, "Zoom Out"};
+static Command ResetZoomCommand = {CommandGroup::Edit, "Reset Zoom"};
 
 //------------------------------------------------------------------------
 class EditorController : public DelegationController,
@@ -111,6 +114,8 @@ public:
 			return editor->canUndo ();
 		if (command == Commands::Redo)
 			return editor->canRedo ();
+		if (command == ZoomInCommand || command == ZoomOutCommand || command == ResetZoomCommand)
+			return true;
 		return false;
 	}
 	bool handleCommand (const Command& command) override
@@ -135,6 +140,23 @@ public:
 			editor->redo ();
 			return true;
 		}
+		if (command == ZoomInCommand)
+		{
+			editor->setZoom (editor->getZoom () + 1);
+			return true;
+		}
+		if (command == ZoomOutCommand)
+		{
+			auto zoom = editor->getZoom ();
+			if (zoom > -10)
+				editor->setZoom (zoom - 1);
+			return true;
+		}
+		if (command == ResetZoomCommand)
+		{
+			editor->setZoom (0);
+			return true;
+		}
 		return false;
 	}
 
@@ -146,7 +168,7 @@ public:
 		const auto& text = searchField->getText ();
 		editor->findAndSelect (text.data (), flags);
 	}
-	
+
 private:
 	ScintillaEditorView* editor {nullptr};
 	CSearchTextEdit* searchField {nullptr};
@@ -187,6 +209,9 @@ public:
 		auto& app = IApplication::instance ();
 		app.registerCommand (FindNextCommand, 'g');
 		app.registerCommand (FindPreviousCommand, 'G');
+		app.registerCommand (ZoomInCommand, '=');
+		app.registerCommand (ZoomOutCommand, '-');
+		app.registerCommand (ResetZoomCommand, '0');
 	}
 	void onClosed (const IWindow& window) override { IApplication::instance ().quit (); }
 };

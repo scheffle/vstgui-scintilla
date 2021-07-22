@@ -570,6 +570,18 @@ bool ScintillaEditorView::showFoldMargin () const
 }
 
 //------------------------------------------------------------------------
+void ScintillaEditorView::setZoom (int32_t zoom)
+{
+	sendMessage (Message::SetZoom, zoom);
+}
+
+//------------------------------------------------------------------------
+int32_t ScintillaEditorView::getZoom () const
+{
+	return static_cast<int32_t> (sendMessage (Message::GetZoom));
+}
+
+//------------------------------------------------------------------------
 void ScintillaEditorView::updateLineNumberMarginWidth ()
 {
 	if (showLineNumberMargin ())
@@ -609,7 +621,7 @@ void ScintillaEditorView::updateMarginsColumns ()
 	{
 		sendMessage (Message::SetMarginTypeN, column, Scintilla::MarginType::Symbol);
 		sendMessage (Message::SetMarginMaskN, column, Scintilla::MaskFolders);
-		sendMessage (Message::SetMarginWidthN, column, 20);
+		sendMessage (Message::SetMarginWidthN, column, 16 + getZoom ());
 		sendMessage (Message::SetMarginSensitiveN, column, 1);
 
 		sendMessage (Message::MarkerDefine, MarkerOutline::Folder, MarkerSymbol::Arrow);
@@ -645,6 +657,11 @@ void ScintillaEditorView::onScintillaNotification (SCNotification* notification)
 		{
 			if (notification->linesAdded != 0)
 				updateLineNumberMarginWidth ();
+			break;
+		}
+		case Notification::Zoom:
+		{
+			updateMarginsColumns ();
 			break;
 		}
 		case Notification::FocusIn:

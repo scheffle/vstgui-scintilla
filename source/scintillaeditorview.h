@@ -151,6 +151,11 @@ public:
 	Scintilla::WrapVisualFlag getLineWrapVisualFlags () const;
 
 	// ------------------------------------
+	// Zoom
+	void setZoom (int32_t zoom);
+	int32_t getZoom () const;
+	
+	// ------------------------------------
 	// Lexer
 	void setLexer (Scintilla::ILexer5* lexer);
 	Scintilla::ILexer5* getLexer () const;

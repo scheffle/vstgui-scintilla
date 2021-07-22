@@ -12,8 +12,8 @@
 			"EditorBackground": "#212121ff",
 			"WindowBackground": "#4f4f4fff",
 			"focus": "#3f87a9ff",
-			"fold.margin": "#272727ff",
-			"fold.margin.hi": "#272727ff",
+			"fold.margin": "#1b1b1bff",
+			"fold.margin.hi": "#353535ff",
 			"font": "#e7e7e7ff",
 			"linenumber.background": "#000000ff",
 			"linenumber.font": "#626262ff",
@@ -43,7 +43,7 @@
 				"SplitViewSize_1_1": "0.5038461538461538324895627738442271947861",
 				"SplitViewSize_2_0": "0.6993699369936993148755277616146486252546",
 				"SplitViewSize_2_1": "0.2961296129612961403054782749677542597055",
-				"TabSwitchValue": "2",
+				"TabSwitchValue": "6",
 				"Version": "1"
 			},
 			"UIAttributesController": {},
@@ -51,7 +51,7 @@
 				"SelectedRow": "2"
 			},
 			"UIColorsDataSource": {
-				"SelectedRow": "6"
+				"SelectedRow": "3"
 			},
 			"UIFontsDataSource": {
 				"SelectedRow": "0"
@@ -216,7 +216,7 @@
 							"line-number-background-color": "linenumber.background",
 							"line-number-font-color": "linenumber.font",
 							"line-wrap-indent-mode": "Deep Indent",
-							"line-wrap-mode": "Word",
+							"line-wrap-mode": "White Space",
 							"line-wrap-start-indent": "0",
 							"line-wrap-visual-end": "true",
 							"line-wrap-visual-margin": "false",
