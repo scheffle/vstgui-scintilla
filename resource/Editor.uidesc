@@ -4,7 +4,7 @@
 		"bitmaps": {},
 		"fonts": {
 			"EditorFont": {
-				"font-name": "Menlo",
+				"font-name": "Hack",
 				"size": "12"
 			}
 		},
@@ -29,7 +29,7 @@
 		},
 		"custom": {
 			"UIDescFilePath": {
-				"path": "/Users/scheffle/Source/vstgui-scintilla/resource/Editor.uidesc"
+				"path": "Z:/vstgui-scintilla/resource/Editor.uidesc"
 			},
 			"UIGridController": {
 				"Grids": "1x 1,5x 5,10x 10,12x 12,15x 15",
@@ -41,8 +41,8 @@
 			"UIEditController": {
 				"EditViewScale": "1",
 				"EditorSize": "0, 0, 1111, 806",
-				"SplitViewSize_0_0": "0.6807692307692307931432651457726024091244",
-				"SplitViewSize_0_1": "0.2935897435897436014151651306747226044536",
+				"SplitViewSize_0_0": "0.6846153846153846256328279196168296039104",
+				"SplitViewSize_0_1": "0.2897435897435897689256023568304954096675",
 				"SplitViewSize_1_0": "0.4910256410256410020132022964389761909842",
 				"SplitViewSize_1_1": "0.5038461538461538324895627738442271947861",
 				"SplitViewSize_2_0": "0.6993699369936993148755277616146486252546",

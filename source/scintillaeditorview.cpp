@@ -19,6 +19,7 @@
 #include "ScintillaTypes.h"
 
 #include <array>
+#include <cassert>
 
 //------------------------------------------------------------------------
 namespace VSTGUI {
@@ -118,6 +119,7 @@ void ScintillaEditorView::setFont (const SharedPointer<CFontDesc>& _font)
 		sendMessage (Message::StyleSetBold, i, isBold);
 		sendMessage (Message::StyleSetItalic, i, isItalic);
 	}
+	updateMarginsColumns ();
 }
 
 //------------------------------------------------------------------------
@@ -275,10 +277,10 @@ UTF8String ScintillaEditorView::getText (const Range& range)
 	if (range.start >= range.end)
 		return {};
 	std::string str;
-	str.resize ((range.end - range.start) );
+	str.resize ((range.end - range.start));
 	Sci_TextRange textRange;
-	textRange.chrg.cpMin = range.start;
-	textRange.chrg.cpMax = range.end;
+	textRange.chrg.cpMin = static_cast<Sci_PositionCR> (range.start);
+	textRange.chrg.cpMax = static_cast<Sci_PositionCR> (range.end);
 	textRange.lpstrText = str.data ();
 	sendMessage (Message::GetTextRange, 0, &textRange);
 	return UTF8String (std::move (str));
@@ -419,7 +421,7 @@ void ScintillaEditorView::setLineWrapStartIndent (uint32_t amount)
 //------------------------------------------------------------------------
 uint32_t ScintillaEditorView::getLineWrapStartIndent () const
 {
-	return sendMessage (Message::GetWrapStartIndent);
+	return static_cast<uint32_t> (sendMessage (Message::GetWrapStartIndent));
 }
 
 //------------------------------------------------------------------------
@@ -449,7 +451,7 @@ WrapVisualFlag ScintillaEditorView::getLineWrapVisualFlags () const
 //------------------------------------------------------------------------
 void ScintillaEditorView::setLineNumbersVisible (bool state)
 {
-	auto currentState = (marginsCol & (1 << MarginsCol::LineNumber));
+	auto currentState = (marginsCol & (1 << MarginsCol::LineNumber)) != 0;
 	if (currentState == state)
 		return;
 	if (state)
@@ -493,7 +495,7 @@ CColor ScintillaEditorView::getLineNumberBackgroundColor () const
 //------------------------------------------------------------------------
 void ScintillaEditorView::setFoldingVisible (bool state)
 {
-	auto currentState = (marginsCol & (1 << MarginsCol::Folding));
+	auto currentState = (marginsCol & (1 << MarginsCol::Folding)) != 0;
 	if (currentState == state)
 		return;
 	if (state)
@@ -634,9 +636,13 @@ void ScintillaEditorView::updateMarginsColumns ()
 	}
 	if (folding)
 	{
+		auto scaleFactor = 1.;
+		if (auto frame = getFrame ())
+			scaleFactor = frame->getZoom ();
+		auto width = static_cast<int32_t> (std::ceil (16. * scaleFactor));
 		sendMessage (Message::SetMarginTypeN, column, Scintilla::MarginType::Symbol);
 		sendMessage (Message::SetMarginMaskN, column, Scintilla::MaskFolders);
-		sendMessage (Message::SetMarginWidthN, column, 16 + getZoom ());
+		sendMessage (Message::SetMarginWidthN, column, width + getZoom ());
 		sendMessage (Message::SetMarginSensitiveN, column, 1);
 
 		sendMessage (Message::MarkerDefine, MarkerOutline::Folder, MarkerSymbol::Arrow);
@@ -909,7 +915,7 @@ public:
 		}
 		if (auto style = attr.getAttributeValue (kAttrFoldDisplayTextStyle))
 		{
-			for (auto index = 0; index < getFoldDisplayTextStyles ().size (); ++index)
+			for (auto index = 0u; index < getFoldDisplayTextStyles ().size (); ++index)
 			{
 				if (*style == getFoldDisplayTextStyles ()[index])
 				{
@@ -936,7 +942,7 @@ public:
 		}
 		if (auto mode = attr.getAttributeValue (kAttrLineWrapMode))
 		{
-			for (auto index = 0; index < getLineWrapModes ().size (); ++index)
+			for (auto index = 0u; index < getLineWrapModes ().size (); ++index)
 			{
 				if (*mode == getLineWrapModes ()[index])
 				{
@@ -947,7 +953,7 @@ public:
 		}
 		if (auto mode = attr.getAttributeValue (kAttrLineWrapIndentMode))
 		{
-			for (auto index = 0; index < getLineWrapIndentModes ().size (); ++index)
+			for (auto index = 0u; index < getLineWrapIndentModes ().size (); ++index)
 			{
 				if (*mode == getLineWrapIndentModes ()[index])
 				{

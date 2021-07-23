@@ -1,9 +1,6 @@
-//
-//  scintillaeditorview.h
-//  scintilla-example
-//
-//  Created by Arne Scheffler on 20.01.18.
-//
+// This file is part of VSTGUI. It is subject to the license terms
+// in the LICENSE file found in the top-level directory of this
+// distribution and at http://github.com/steinbergmedia/vstgui/LICENSE
 
 #include "vstgui/lib/ccolor.h"
 #include "vstgui/lib/cfont.h"
@@ -213,15 +210,14 @@ private:
 	void updateMarginsColumns ();
 	void updateLineNumberMarginWidth ();
 
-	SharedPointer<CFontDesc> font;
-	Scintilla::ILexer5* lexer {nullptr};
-
 	enum MarginsCol
 	{
 		LineNumber = 0,
 		Folding
 	};
 
+	SharedPointer<CFontDesc> font;
+	Scintilla::ILexer5* lexer {nullptr};
 	uint32_t marginsCol {0};
 	CColor foldMarginColorHi {kBlackCColor};
 	CColor foldMarginColor {kWhiteCColor};

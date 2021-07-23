@@ -94,7 +94,7 @@ public:
 		{
 			editor = ed;
 			editor->registerViewListener (this);
-
+#if 0
 			if (auto lexer = CreateLexer ("cpp"))
 			{
 				auto keywords =
@@ -120,7 +120,7 @@ public:
 				editor->setStyleColor (SCE_C_COMMENTDOC, commentColor);
 				editor->setStyleFontWeight (SCE_C_WORD, 900);
 			}
-
+#endif
 			Preferences prefs;
 			if (auto value = prefs.get ("EditorText"))
 			{

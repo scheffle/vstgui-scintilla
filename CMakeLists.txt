@@ -9,11 +9,21 @@ if(CMAKE_CONFIGURATION_TYPES)
   set_property(GLOBAL PROPERTY USE_FOLDERS ON)
 endif()
 
+set(CMAKE_RUNTIME_OUTPUT_DIRECTORY
+	$<$<CONFIG:Debug>:${CMAKE_BINARY_DIR}/Debug/>$<$<CONFIG:Release>:${CMAKE_BINARY_DIR}/Release/>$<$<CONFIG:ReleaseLTO>:${CMAKE_BINARY_DIR}/ReleaseLTO/>
+)
+set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY
+	$<$<CONFIG:Debug>:${CMAKE_BINARY_DIR}/Debug/libs/>$<$<CONFIG:Release>:${CMAKE_BINARY_DIR}/Release/libs/>$<$<CONFIG:ReleaseLTO>:${CMAKE_BINARY_DIR}/ReleaseLTO/libs/>
+)
+set(CMAKE_LIBRARY_OUTPUT_DIRECTORY
+	$<$<CONFIG:Debug>:${CMAKE_BINARY_DIR}/Debug/libs>$<$<CONFIG:Release>:${CMAKE_BINARY_DIR}/Release/libs>$<$<CONFIG:ReleaseLTO>:${CMAKE_BINARY_DIR}/ReleaseLTO/libs>
+)
+
 if(NOT VSTGUI_PATH)
 	set(VSTGUI_PATH "../vstgui")
 endif()
 if(NOT SCINTILLA_PATH)
-	set(SCINTILLA_PATH "../external/scintilla")
+	set(SCINTILLA_PATH "../external/scintilla" CACHE PATH "Path to scintilla")
 endif()
 if(NOT LEXILLA_PATH)
 	set(LEXILLA_PATH "../external/lexilla")
@@ -71,6 +81,15 @@ if(MSVC)
     ${${target}_sources}
     "source/scintillaeditorview_win32.cpp"
   )
+  include(ExternalProject)
+  ExternalProject_Add(Scintilla
+    SOURCE_DIR ${SCINTILLA_PATH}/win32/
+#    BINARY_DIR CMAKE_CURRENT_SOURCE_DIR/scintilla-build/
+    CONFIGURE_COMMAND ""
+    BUILD_COMMAND nmake DEBUG=1 -b -f ${SCINTILLA_PATH}/win32/scintilla.mak
+    BUILD_IN_SOURCE TRUE
+    INSTALL_COMMAND ""
+  )
 endif()
 
 vstgui_add_executable(${target}
@@ -78,6 +97,10 @@ vstgui_add_executable(${target}
 )
 vstgui_add_resources(${target}
   "${${target}_resources}"
+)
+
+vstgui_add_resources(${target}
+  "resource/fonts/Hack-Regular.ttf" "fonts"
 )
 
 vstgui_set_target_infoplist(${target} resource/Info.plist)
@@ -110,3 +133,6 @@ if(CMAKE_HOST_APPLE)
   target_link_libraries(${target} "-framework Scintilla" "lexilla")
 
 endif(CMAKE_HOST_APPLE)
+if(MSVC)
+  add_dependencies(${target} Scintilla)
+endif(MSVC)
