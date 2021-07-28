@@ -159,6 +159,8 @@ public:
 	void setLexer (Scintilla::ILexer5* lexer);
 	Scintilla::ILexer5* getLexer () const;
 
+	static Scintilla::ILexer5* createLexer (const char* name);
+
 	/** set style color */
 	void setStyleColor (uint32_t index, const CColor& textColor,
 	                    const CColor& backColor = kTransparentCColor);

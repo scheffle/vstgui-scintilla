@@ -6,6 +6,7 @@
 #import "vstgui/lib/cframe.h"
 #import "vstgui/lib/dispatchlist.h"
 #import "vstgui/lib/platform/platform_macos.h"
+#import "Lexilla.h"
 #import <Scintilla/ScintillaView.h>
 
 //------------------------------------------------------------------------
@@ -146,6 +147,12 @@ void ScintillaEditorView::registerListener (IScintillaListener* listener)
 void ScintillaEditorView::unregisterListener (IScintillaListener* listener)
 {
 	impl->listeners.remove (listener);
+}
+
+//------------------------------------------------------------------------
+Scintilla::ILexer5* ScintillaEditorView::createLexer (const char* name)
+{
+	return CreateLexer (name);
 }
 
 //------------------------------------------------------------------------

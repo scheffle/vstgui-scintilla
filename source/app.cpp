@@ -16,11 +16,7 @@
 #include "vstgui/uidescription/delegationcontroller.h"
 
 #include "ILexer.h"
-#include "Lexilla.h"
-#include "LexillaAccess.h"
 #include "SciLexer.h"
-#include "Scintilla.h"
-#include "ScintillaMessages.h"
 
 using namespace VSTGUI;
 using namespace VSTGUI::Standalone;
@@ -94,14 +90,14 @@ public:
 		{
 			editor = ed;
 			editor->registerViewListener (this);
-#if 0
-			if (auto lexer = CreateLexer ("cpp"))
+			if (auto lexer = ScintillaEditorView::createLexer ("cpp"))
 			{
 				auto keywords =
 				    R"(alignas alignof and and_eq asm auto bitand bitor bool break case catch char char16_t char32_t class compl const constexpr const_cast continue decltype default delete do double dynamic_cast else enum explicit export extern false float for friend goto if inline int long mutable namespace new noexcept not not_eq nullptr operator or or_eq private protected public register reinterpret_cast return short signed sizeof static static_assert static_cast struct switch template this thread_local throw true try typedef typeid typename union unsigned using virtual void volatile wchar_t while xor xor_eq)";
 				lexer->WordListSet (0, keywords);
 				lexer->PropertySet ("fold", "1");
 				lexer->PropertySet ("fold.comment", "1");
+				lexer->PropertySet ("lexer.cpp.track.preprocessor", "0");
 				editor->setLexer (lexer);
 
 				CColor commentColor;
@@ -119,8 +115,9 @@ public:
 				editor->setStyleColor (SCE_C_COMMENTLINE, commentColor);
 				editor->setStyleColor (SCE_C_COMMENTDOC, commentColor);
 				editor->setStyleFontWeight (SCE_C_WORD, 900);
+				editor->setStyleColor (SCE_C_PREPROCESSORCOMMENT, kRedCColor, backgroundColor);
+
 			}
-#endif
 			Preferences prefs;
 			if (auto value = prefs.get ("EditorText"))
 			{

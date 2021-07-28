@@ -26,25 +26,43 @@ struct Globals
 
 	bool available () const { return scintillaModule != nullptr; }
 
+	Scintilla::ILexer5* createLexer (const char* name)
+	{
+		if (CreateLexer)
+			return CreateLexer (name);
+		return nullptr;
+	}
 private:
+	using CreateLexerFn = Scintilla::ILexer5* (*) (const char* name);
+
 	HMODULE scintillaModule {nullptr};
+	HMODULE lexillaModule {nullptr};
+
+	CreateLexerFn CreateLexer {nullptr};
 
 	Globals ()
 	{
 		auto hInstance = getPlatformFactory ().asWin32Factory ()->getInstance ();
-		std::string path;
-		path.resize (MAX_PATH);
-		auto size = GetModuleFileNameA (hInstance, path.data (), static_cast<DWORD> (path.size ()));
-		path.resize (size);
-		auto it = path.find_last_of ("\\");
-		if (it != std::string::npos)
+		if (auto resPath = getPlatformFactory ().asWin32Factory ()->getResourceBasePath ())
 		{
-			path.resize (it);
-			path += "\\Scintilla.dll";
-			scintillaModule = LoadLibraryA (path.data ());
+			auto path = resPath->getString ();
+			auto scintillaPath = path + "libs\\Scintilla.dll";
+			scintillaModule = LoadLibraryA (scintillaPath.data ());
+			auto lexillaPath = path + "libs\\lexilla.dll";
+			lexillaModule = LoadLibraryA (lexillaPath.data ());
+			if (lexillaModule)
+			{
+				CreateLexer = reinterpret_cast<CreateLexerFn> (GetProcAddress (lexillaModule, "CreateLexer"));
+			}
 		}
 	}
-	~Globals () noexcept { FreeLibrary (scintillaModule); }
+	~Globals () noexcept 
+	{
+		if (scintillaModule)
+			FreeLibrary (scintillaModule);
+		if (lexillaModule)
+			FreeLibrary (lexillaModule);
+	}
 };
 
 //------------------------------------------------------------------------
@@ -329,6 +347,12 @@ void ScintillaEditorView::registerListener (IScintillaListener* listener)
 void ScintillaEditorView::unregisterListener (IScintillaListener* listener)
 {
 	impl->listeners.remove (listener);
+}
+
+//------------------------------------------------------------------------
+Scintilla::ILexer5* ScintillaEditorView::createLexer (const char* name)
+{
+	return Globals::instance ().createLexer (name);
 }
 
 //------------------------------------------------------------------------

@@ -5,7 +5,7 @@
 		"fonts": {
 			"EditorFont": {
 				"font-name": "Hack",
-				"size": "12"
+				"size": "13"
 			}
 		},
 		"colors": {
@@ -29,7 +29,7 @@
 		},
 		"custom": {
 			"UIDescFilePath": {
-				"path": "Z:/vstgui-scintilla/resource/Editor.uidesc"
+				"path": "/Users/scheffle/Source/vstgui-scintilla/resource/Editor.uidesc"
 			},
 			"UIGridController": {
 				"Grids": "1x 1,5x 5,10x 10,12x 12,15x 15",
