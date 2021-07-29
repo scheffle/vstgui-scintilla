@@ -710,11 +710,6 @@ void ScintillaEditorView::onScintillaNotification (SCNotification* notification)
 			}
 			break;
 		}
-		case Notification::Key:
-		{
-			printf ("");
-			break;
-		}
 		default: break;
 	}
 }
