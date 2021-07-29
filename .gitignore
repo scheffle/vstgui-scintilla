@@ -1,3 +1,5 @@
 build
 scintilla
 vstgui
+cmake-build-debug
+.idea

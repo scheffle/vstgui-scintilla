@@ -15,7 +15,7 @@ enum class Wrap;
 enum class WrapIndentMode;
 enum class WrapVisualFlag;
 enum class FoldDisplayTextStyle;
-};
+}
 
 //------------------------------------------------------------------------
 namespace VSTGUI {
@@ -40,14 +40,14 @@ public:
 	};
 
 	ScintillaEditorView ();
-	~ScintillaEditorView () noexcept;
+	~ScintillaEditorView () noexcept override;
 
 	/** set current text */
 	void setText (UTF8StringPtr text);
 	/** get current text */
-	UTF8String getText () const;
+	[[nodiscard]] UTF8String getText () const;
 	/** get part of the text  */
-	UTF8String getText (const Range& range);
+	[[nodiscard]] UTF8String getText (const Range& range);
 
 	/** set font for all styles.
 	 *	@param font font
@@ -56,32 +56,34 @@ public:
 	/** get the font for all styles
 	 *	@return font previously set with setFont
 	 */
-	SharedPointer<CFontDesc> getFont () const;
+	[[nodiscard]] SharedPointer<CFontDesc> getFont () const;
 
 	void setStaticFontColor (const CColor& color);
-	CColor getStaticFontColor () const;
+	[[nodiscard]] CColor getStaticFontColor () const;
 
 	void setBackgroundColor (const CColor& color);
-	CColor getBackgroundColor () const;
+	[[nodiscard]] CColor getBackgroundColor () const;
 
 	void setCaretColor (const CColor& color);
-	CColor getCaretColor () const;
+	[[nodiscard]] CColor getCaretColor () const;
 
 	// ------------------------------------
 	// Selection
-	Range getSelection () const;
+	[[nodiscard]] Range getSelection () const;
 	void setSelection (Range selection);
-	bool replaceSelection (UTF8StringPtr string);
+	void selectAll ();
+
+	[[maybe_unused]] bool replaceSelection (UTF8StringPtr string);
 
 	void setSelectionBackgroundColor (const CColor& color);
-	CColor getSelectionBackgroundColor () const;
+	[[nodiscard]] CColor getSelectionBackgroundColor () const;
 	void setSelectionForegroundColor (const CColor& color);
-	CColor getSelectionForegroundColor () const;
+	[[nodiscard]] CColor getSelectionForegroundColor () const;
 
 	void setInactiveSelectionBackgroundColor (const CColor& color);
-	CColor getInactiveSelectionBackgroundColor () const;
+	[[nodiscard]] CColor getInactiveSelectionBackgroundColor () const;
 	void setInactiveSelectionForegroundColor (const CColor& color);
-	CColor getInactiveSelectionForegroundColor () const;
+	[[nodiscard]] CColor getInactiveSelectionForegroundColor () const;
 
 	// ------------------------------------
 	// Search
@@ -103,61 +105,61 @@ public:
 
 	// ------------------------------------
 	// Undo/Redo
-	bool canUndo () const;
-	bool canRedo () const;
+	[[nodiscard]] bool canUndo () const;
+	[[nodiscard]] bool canRedo () const;
 	void undo ();
 	void redo ();
 
 	// ------------------------------------
 	// Tabs/Indentation
 	void setUseTabs (bool state);
-	bool getUseTabs () const;
+	[[nodiscard]] bool getUseTabs () const;
 	void setTabWidth (uint32_t width);
-	uint32_t getTabWidth () const;
+	[[nodiscard]] uint32_t getTabWidth () const;
 
 	// ------------------------------------
 	// Line Numbers
 	void setLineNumbersVisible (bool state);
-	bool getLineNumbersVisible () const;
+	[[nodiscard]] bool getLineNumbersVisible () const;
 	void setLineNumberForegroundColor (const CColor& color);
-	CColor getLineNumberForegroundColor () const;
+	[[nodiscard]] CColor getLineNumberForegroundColor () const;
 	void setLineNumberBackgroundColor (const CColor& color);
-	CColor getLineNumberBackgroundColor () const;
+	[[nodiscard]] CColor getLineNumberBackgroundColor () const;
 
 	// ------------------------------------
 	// Folding
 	void setFoldingVisible (bool state);
-	bool getFoldingVisible () const;
+	[[nodiscard]] bool getFoldingVisible () const;
 	void setDefaultFoldDisplayText (UTF8StringPtr text);
-	UTF8String getDefaultFoldDisplayText () const;
+	[[nodiscard]] UTF8String getDefaultFoldDisplayText () const;
 	void setFoldDisplayTextStyle (Scintilla::FoldDisplayTextStyle style);
-	Scintilla::FoldDisplayTextStyle getFoldDisplayTextStyle () const;
+	[[nodiscard]] Scintilla::FoldDisplayTextStyle getFoldDisplayTextStyle () const;
 
 	void setFoldMarginColorHi (const CColor& color);
-	CColor getFoldMarginColorHi () const;
+	[[nodiscard]] CColor getFoldMarginColorHi () const;
 	void setFoldMarginColor (const CColor& color);
-	CColor getFoldMarginColor () const;
+	[[nodiscard]] CColor getFoldMarginColor () const;
 
 	// ------------------------------------
 	// Line Wrap
 	void setLineWrap (Scintilla::Wrap mode);
-	Scintilla::Wrap getLineWrap () const;
+	[[nodiscard]] Scintilla::Wrap getLineWrap () const;
 	void setLineWrapStartIndent (uint32_t amount);
-	uint32_t getLineWrapStartIndent () const;
+	[[nodiscard]] uint32_t getLineWrapStartIndent () const;
 	void setLineWrapIndentMode (Scintilla::WrapIndentMode mode);
-	Scintilla::WrapIndentMode getLineWrapIndentMode () const;
+	[[nodiscard]] Scintilla::WrapIndentMode getLineWrapIndentMode () const;
 	void setLineWrapVisualFlags (Scintilla::WrapVisualFlag flags);
-	Scintilla::WrapVisualFlag getLineWrapVisualFlags () const;
+	[[nodiscard]] Scintilla::WrapVisualFlag getLineWrapVisualFlags () const;
 
 	// ------------------------------------
 	// Zoom
 	void setZoom (int32_t zoom);
-	int32_t getZoom () const;
-	
+	[[nodiscard]] int32_t getZoom () const;
+
 	// ------------------------------------
 	// Lexer
 	void setLexer (Scintilla::ILexer5* lexer);
-	Scintilla::ILexer5* getLexer () const;
+	[[nodiscard]] Scintilla::ILexer5* getLexer () const;
 
 	static Scintilla::ILexer5* createLexer (const char* name);
 
@@ -194,7 +196,7 @@ public:
 	bool attached (CView* parent) override;
 	bool removed (CView* parent) override;
 	void setViewSize (const CRect& rect, bool invalid) override;
-	void setMouseEnabled (bool bEnable = true) override;
+	void setMouseEnabled (bool bEnable) override;
 	void looseFocus () override;
 	void takeFocus () override;
 
@@ -206,9 +208,9 @@ private:
 	void onScintillaNotification (SCNotification* notification) override;
 	void draw (CDrawContext* pContext) override;
 	void platformSetBackgroundColor (const CColor& color);
-	bool showLineNumberMargin () const;
-	bool showFoldMargin () const;
-	
+	[[nodiscard]] bool showLineNumberMargin () const;
+	[[nodiscard]] bool showFoldMargin () const;
+
 	void updateMarginsColumns ();
 	void updateLineNumberMarginWidth ();
 
@@ -231,22 +233,22 @@ private:
 /** a helper to convert from CColor to a color scintilla understands */
 inline intptr_t toScintillaColor (const CColor& c)
 {
-	int32_t red = static_cast<int32_t> (c.red);
-	int32_t green = static_cast<int32_t> (c.green);
-	int32_t blue = static_cast<int32_t> (c.blue);
-	int32_t alpha = static_cast<int32_t> (c.alpha);
+	auto red = static_cast<int32_t> (c.red);
+	auto green = static_cast<int32_t> (c.green);
+	auto blue = static_cast<int32_t> (c.blue);
+	auto alpha = static_cast<int32_t> (c.alpha);
 	return (alpha << 24) + (blue << 16) + (green << 8) + red;
 }
 
 //------------------------------------------------------------------------
 inline CColor fromScintillaColor (intptr_t v)
 {
-	int32_t alpha = (v & 0xFF000000) >> 24;
-	int32_t blue = (v & 0x00FF0000) >> 16;
-	int32_t green = (v & 0x0000FF00) >> 8;
-	int32_t red = v & 0x000000FF;
-	return CColor (static_cast<uint8_t> (red), static_cast<uint8_t> (green),
-	               static_cast<uint8_t> (blue), static_cast<uint8_t> (alpha));
+	auto alpha = static_cast<int32_t> (v & 0xFF000000) >> 24;
+	auto blue = static_cast<int32_t> (v & 0x00FF0000) >> 16;
+	auto green = static_cast<int32_t> (v & 0x0000FF00) >> 8;
+	auto red = static_cast<int32_t> (v & 0x000000FF);
+	return {static_cast<uint8_t> (red), static_cast<uint8_t> (green), static_cast<uint8_t> (blue),
+	        static_cast<uint8_t> (alpha)};
 }
 
 //------------------------------------------------------------------------

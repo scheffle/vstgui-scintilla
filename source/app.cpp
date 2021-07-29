@@ -162,7 +162,7 @@ public:
 			return editor->canRedo ();
 		if (command == ZoomInCommand || command == ZoomOutCommand || command == ResetZoomCommand)
 			return true;
-		if (command == FindCommand)
+		if (command == FindCommand || command == Commands::SelectAll)
 			return true;
 		if (command == UseSelectionForFindCommand)
 		{
@@ -220,6 +220,11 @@ public:
 			auto selection = editor->getSelection ();
 			auto text = editor->getText (selection);
 			searchField->setText (text);
+			return true;
+		}
+		if (command == Commands::SelectAll)
+		{
+			editor->selectAll ();
 			return true;
 		}
 		return false;

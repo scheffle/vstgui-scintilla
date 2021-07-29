@@ -1,9 +1,6 @@
-//
-//  scintillaeditorview_uidesc.cpp
-//  scintilla-example
-//
-//  Created by Arne Scheffler on 20.01.18.
-//
+// This file is part of VSTGUI. It is subject to the license terms
+// in the LICENSE file found in the top-level directory of this
+// distribution and at http://github.com/steinbergmedia/vstgui/LICENSE
 
 #include "scintillaeditorview.h"
 #include "vstgui/lib/cframe.h"
@@ -303,6 +300,12 @@ void ScintillaEditorView::setSelection (Range selection)
 }
 
 //------------------------------------------------------------------------
+void ScintillaEditorView::selectAll ()
+{
+	sendMessage (Message::SelectAll);
+}
+
+//------------------------------------------------------------------------
 int64_t ScintillaEditorView::findAndSelect (UTF8StringPtr searchString, uint32_t searchFlags)
 {
 	auto sciSearchFlags = Scintilla::FindOption::None;
@@ -357,7 +360,7 @@ int64_t ScintillaEditorView::findAndSelect (UTF8StringPtr searchString, uint32_t
 }
 
 //------------------------------------------------------------------------
-bool ScintillaEditorView::replaceSelection (UTF8StringPtr string)
+[[maybe_unused]] bool ScintillaEditorView::replaceSelection (UTF8StringPtr string)
 {
 	sendMessage (Message::ReplaceSel, 0, string);
 	return true;
@@ -707,6 +710,11 @@ void ScintillaEditorView::onScintillaNotification (SCNotification* notification)
 			}
 			break;
 		}
+		case Notification::Key:
+		{
+			printf ("");
+			break;
+		}
 		default: break;
 	}
 }
@@ -720,28 +728,30 @@ using UIViewCreator::bitmapToString;
 using UIViewCreator::colorToString;
 using UIViewCreator::pointToString;
 
-static std::string kAttrEditorFont = "editor-font";
-static std::string kAttrEditorMargin = "editor-margin";
-static std::string kAttrLineNumberFontColor = "line-number-font-color";
-static std::string kAttrLineNumberBackgroundColor = "line-number-background-color";
-static std::string kAttrSelectionBackgroundColor = "selection-background-color";
-static std::string kAttrSelectionForegroundColor = "selection-foreground-color";
-static std::string kAttrInactiveSelectionBackgroundColor = "selection-inactive-background-color";
-static std::string kAttrInactiveSelectionForegroundColor = "selection-inactive-foreground-color";
-static std::string kAttrShowLineNumbers = "show-line-numbers";
-static std::string kAttrShowFolding = "show-folding";
-static std::string kAttrFoldMarginColor = "fold-margin-color";
-static std::string kAttrFoldMarginColorHi = "fold-margin-color-hi";
-static std::string kAttrFoldDisplayTextStyle = "fold-display-text-style";
-static std::string kAttrDefaultFoldDisplayText = "default-fold-display-text";
-static std::string kAttrUseTabs = "use-tabs";
-static std::string kAttrTabWidth = "tab-width";
-static std::string kAttrLineWrapMode = "line-wrap-mode";
-static std::string kAttrLineWrapIndentMode = "line-wrap-indent-mode";
-static std::string kAttrLineWrapStartIndent = "line-wrap-start-indent";
-static std::string kAttrLineWrapVisualStart = "line-wrap-visual-start";
-static std::string kAttrLineWrapVisualEnd = "line-wrap-visual-end";
-static std::string kAttrLineWrapVisualMargin = "line-wrap-visual-margin";
+static const std::string kAttrEditorFont = "editor-font";
+static const std::string kAttrEditorMargin = "editor-margin";
+static const std::string kAttrLineNumberFontColor = "line-number-font-color";
+static const std::string kAttrLineNumberBackgroundColor = "line-number-background-color";
+static const std::string kAttrSelectionBackgroundColor = "selection-background-color";
+static const std::string kAttrSelectionForegroundColor = "selection-foreground-color";
+static const std::string kAttrInactiveSelectionBackgroundColor =
+    "selection-inactive-background-color";
+static const std::string kAttrInactiveSelectionForegroundColor =
+    "selection-inactive-foreground-color";
+static const std::string kAttrShowLineNumbers = "show-line-numbers";
+static const std::string kAttrShowFolding = "show-folding";
+static const std::string kAttrFoldMarginColor = "fold-margin-color";
+static const std::string kAttrFoldMarginColorHi = "fold-margin-color-hi";
+static const std::string kAttrFoldDisplayTextStyle = "fold-display-text-style";
+static const std::string kAttrDefaultFoldDisplayText = "default-fold-display-text";
+static const std::string kAttrUseTabs = "use-tabs";
+static const std::string kAttrTabWidth = "tab-width";
+static const std::string kAttrLineWrapMode = "line-wrap-mode";
+static const std::string kAttrLineWrapIndentMode = "line-wrap-indent-mode";
+static const std::string kAttrLineWrapStartIndent = "line-wrap-start-indent";
+static const std::string kAttrLineWrapVisualStart = "line-wrap-visual-start";
+static const std::string kAttrLineWrapVisualEnd = "line-wrap-visual-end";
+static const std::string kAttrLineWrapVisualMargin = "line-wrap-visual-margin";
 
 //-----------------------------------------------------------------------------
 class ScintillaEditorViewCreator : public ViewCreatorAdapter
